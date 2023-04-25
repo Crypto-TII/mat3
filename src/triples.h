@@ -139,7 +139,7 @@ static void msg_rot(bgv_Message *rop, const bgv_Message *m, size_t steps);
 static void mpz_addmod(mpz_t rop, const mpz_t op1, const mpz_t op2);
 static void mpz_mulmod(mpz_t rop, const mpz_t op1, const mpz_t op2);
 
-static void poly_flood(size_t idx, bgv_Poly *p, bgv_Seed *seed);
+static void poly_flood(size_t idx, bgv_Poly *p, tiimat3_Seed *seed);
 
 static void
 block_add(triples_Block *rop, const triples_Block *op1, const triples_Block *op2, size_t len)
@@ -215,14 +215,14 @@ block_dealloc(triples_Block *op, size_t len)
 static void
 block_decrypt(triples_Block *rop, triples_BlockEnc *op)
 {
-	bgv_Seed seed;
+	tiimat3_Seed seed;
 	bgv_Message *m;
 	bgv_Poly *p;
 	size_t i;
 
 	m = bgv_alloc_msg(1);
 	p = bgv_alloc(BGV_QLEN, sizeof *p);
-	bgv_sample_seed(&seed);
+	tiimat3_random_seed(&seed);
 
 	for (i = 0; i < BGV_QLEN; ++i) {
 		if (bgv_q[i].drop)
@@ -242,14 +242,14 @@ block_decrypt(triples_Block *rop, triples_BlockEnc *op)
 static void
 block_encrypt(triples_BlockEnc *rop, const triples_Block *blocks, size_t rot, void (*transform)(triples_Block *, const triples_Block *))
 {
-	bgv_Seed seed;
+	tiimat3_Seed seed;
 	bgv_Message *m;
 	bgv_Poly *p;
 	size_t i;
 
 	m = bgv_alloc_msg(1);
 	p = bgv_alloc(1, sizeof *p);
-	bgv_sample_seed(&seed);
+	tiimat3_random_seed(&seed);
 
 	block_pack(m, blocks, rot, transform);
 	for (i = 0; i < BGV_QLEN; ++i) {
@@ -994,7 +994,7 @@ mpz_mulmod(mpz_t rop, const mpz_t op1, const mpz_t op2)
 }
 
 static void
-poly_flood(size_t idx, bgv_Poly *p, bgv_Seed *seed)
+poly_flood(size_t idx, bgv_Poly *p, tiimat3_Seed *seed)
 {
 	unsigned char rand[TRIPLES_FLOOD_BYTES];
 	bgv_Poly *e;
@@ -1005,7 +1005,7 @@ poly_flood(size_t idx, bgv_Poly *p, bgv_Seed *seed)
 	mpz_init(tmp);
 
 	for (j = 0; j < BGV_D; ++j) {
-		bgv_sample_bytes(rand, sizeof rand, seed);
+		tiimat3_random_bytes(rand, sizeof rand, seed);
 		rand[0] >>= (CHAR_BIT - (TRIPLES_FLOOD_BITS % CHAR_BIT)) % CHAR_BIT;
 		mpz_import(tmp, sizeof rand, 1, 1, 1, 0, rand);
 
@@ -1056,7 +1056,7 @@ triples_deinit_mixed(void)
 void
 triples_init(void)
 {
-	bgv_Seed seed[BGV_QPLEN];
+	tiimat3_Seed seed[BGV_QPLEN];
 	bgv_Message *m;
 	bgv_Poly p;
 	size_t i, j, k;
@@ -1087,22 +1087,22 @@ triples_init(void)
 
 	/* BGV keys */
 	bgv_keygen_secret(&sk);
-	bgv_sample_seed(seed);
+	tiimat3_random_seed(seed);
 	for (i = 0; i < BGV_QLEN; ++i)
 		bgv_keygen_public(i, &pk[i], &sk, seed);
 
 	for (i = 0; i < BGV_QPLEN; ++i)
-		bgv_sample_seed(&seed[i]);
+		tiimat3_random_seed(&seed[i]);
 	for (i = 0; i < BGV_QPLEN; ++i)
 		bgv_keygen_switchr(i, &kswA[BGV_QPLEN + i], &sk, TRIPLES_ROTA, seed);
 
 	for (i = 0; i < BGV_QPLEN; ++i)
-		bgv_sample_seed(&seed[i]);
+		tiimat3_random_seed(&seed[i]);
 	for (i = 0; i < BGV_QPLEN; ++i)
 		bgv_keygen_switchr(i, &kswB[BGV_QPLEN + i], &sk, TRIPLES_ROTB, seed);
 
 	for (i = 0; i < BGV_QPLEN; ++i)
-		bgv_sample_seed(&seed[i]);
+		tiimat3_random_seed(&seed[i]);
 	for (i = 0; i < BGV_QPLEN; ++i)
 		bgv_keygen_switch2(i, &ksw2[i], &sk, seed);
 
@@ -1118,7 +1118,7 @@ triples_init(void)
 			mpz_set(m->value[j], MAC[i]);
 		bgv_pack(m, m);
 
-		bgv_sample_seed(seed);
+		tiimat3_random_seed(seed);
 		for (j = 0; j < BGV_QLEN; ++j) {
 			bgv_encode(j, &p, m);
 			bgv_encrypt(j, &ctMAC[i][j], &pk[j], &p, seed);
@@ -1148,26 +1148,26 @@ triples_init(void)
 void
 triples_init_hoisted(void)
 {
-	bgv_Seed seed[BGV_QPLEN];
+	tiimat3_Seed seed[BGV_QPLEN];
 	size_t i, k;
 
 	for (k = 2; k < TRIPLES_DIM; ++k) {
 		for (i = 0; i < BGV_QPLEN; ++i)
-			bgv_sample_seed(&seed[i]);
+			tiimat3_random_seed(&seed[i]);
 		for (i = 0; i < BGV_QPLEN; ++i)
 			bgv_keygen_switchr(i, &kswA[k * BGV_QPLEN + i], &sk, k * TRIPLES_ROTA, seed);
 	}
 
 	for (k = 1; k < TRIPLES_DIM; ++k) {
 		for (i = 0; i < BGV_QPLEN; ++i)
-			bgv_sample_seed(&seed[i]);
+			tiimat3_random_seed(&seed[i]);
 		for (i = 0; i < BGV_QPLEN; ++i)
 			bgv_keygen_switchr(i, &kswAneg[k * BGV_QPLEN + i], &sk, BGV_D / 2 - TRIPLES_ROTB + k * TRIPLES_ROTA, seed);
 	}
 
 	for (k = 2; k < TRIPLES_DIM; ++k) {
 		for (i = 0; i < BGV_QPLEN; ++i)
-			bgv_sample_seed(&seed[i]);
+			tiimat3_random_seed(&seed[i]);
 		for (i = 0; i < BGV_QPLEN; ++i)
 			bgv_keygen_switchr(i, &kswB[k * BGV_QPLEN + i], &sk, k * TRIPLES_ROTB, seed);
 	}
@@ -1176,26 +1176,26 @@ triples_init_hoisted(void)
 void
 triples_init_mixed(void)
 {
-	bgv_Seed seed[BGV_QPLEN];
+	tiimat3_Seed seed[BGV_QPLEN];
 	size_t i, k;
 
 	for (k = 2; k <= TRIPLES_THREADS; ++k) {
 		for (i = 0; i < BGV_QPLEN; ++i)
-			bgv_sample_seed(&seed[i]);
+			tiimat3_random_seed(&seed[i]);
 		for (i = 0; i < BGV_QPLEN; ++i)
 			bgv_keygen_switchr(i, &kswA[k * BGV_QPLEN + i], &sk, k * TRIPLES_ROTA, seed);
 	}
 
 	for (k = 1; k <= TRIPLES_THREADS; ++k) {
 		for (i = 0; i < BGV_QPLEN; ++i)
-			bgv_sample_seed(&seed[i]);
+			tiimat3_random_seed(&seed[i]);
 		for (i = 0; i < BGV_QPLEN; ++i)
 			bgv_keygen_switchr(i, &kswAneg[k * BGV_QPLEN + i], &sk, BGV_D / 2 - TRIPLES_ROTB + k * TRIPLES_ROTA, seed);
 	}
 
 	for (k = 2; k <= TRIPLES_THREADS; ++k) {
 		for (i = 0; i < BGV_QPLEN; ++i)
-			bgv_sample_seed(&seed[i]);
+			tiimat3_random_seed(&seed[i]);
 		for (i = 0; i < BGV_QPLEN; ++i)
 			bgv_keygen_switchr(i, &kswB[k * BGV_QPLEN + i], &sk, k * TRIPLES_ROTB, seed);
 	}

@@ -1,5 +1,4 @@
-#define BGV_RANDOM_IMPL
-#include "random.h"
+#include "../src/random.c"
 
 #define SAMPLES 10000000
 signed char samples_i8[SAMPLES];
@@ -63,12 +62,12 @@ static void
 test_random(void)
 {
 	/* https://www.itl.nist.gov/div898/handbook/eda/section3/eda3674.htm */
-	bgv_Seed seed;
+	tiimat3_Seed seed;
 	double obs[256], exp[256];
 	signed char r;
 	size_t sum, i;
 
-	bgv_sample_seed(&seed);
+	tiimat3_random_seed(&seed);
 	random_bytes(samples_i8, SAMPLES, &seed);
 
 	memset(obs, 0, sizeof obs);
@@ -95,13 +94,13 @@ static void
 test_sample(void)
 {
 	/* https://www.itl.nist.gov/div898/handbook/eda/section3/eda3674.htm */
-	bgv_Seed seed;
+	tiimat3_Seed seed;
 	double obs[101], exp[101];
 	size_t sum, i;
 
-	bgv_sample_seed(&seed);
+	tiimat3_random_seed(&seed);
 
-	bgv_sample_cbd1_i8(samples_i8, SAMPLES, &seed);
+	tiimat3_random_cbd1_i8(samples_i8, SAMPLES, &seed);
 	memset(obs, 0, sizeof obs);
 	for (i = 0; i < SAMPLES; ++i)
 		++obs[1 + samples_i8[i]];
@@ -113,7 +112,7 @@ test_sample(void)
 		exp[i] = binomial(2, i) * SAMPLES / (1 << 2);
 	assert(chi2(obs, exp, 3) < 13.816);
 
-	bgv_sample_cbd21_i8(samples_i8, SAMPLES, &seed);
+	tiimat3_random_cbd21_i8(samples_i8, SAMPLES, &seed);
 	memset(obs, 0, sizeof obs);
 	for (i = 0; i < SAMPLES; ++i)
 		++obs[21 + samples_i8[i]];
@@ -125,7 +124,7 @@ test_sample(void)
 		exp[i] = (double)binomial(42, i) * SAMPLES / (1l << 42);
 	assert(chi2(obs, exp, 43) < 76.084);
 
-	bgv_sample_uniform_u64(samples_u64, SAMPLES, 101, &seed);
+	tiimat3_random_uniform_u64(samples_u64, SAMPLES, 101, &seed);
 	memset(obs, 0, sizeof obs);
 	for (i = 0; i < SAMPLES; ++i)
 		++obs[samples_u64[i]];

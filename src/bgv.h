@@ -44,7 +44,7 @@ struct bgv_delta {
 };
 
 struct bgv_key_public {
-	bgv_Seed seed;
+	tiimat3_Seed seed;
 	bgv_Poly poly;
 };
 
@@ -53,7 +53,7 @@ struct bgv_key_secret {
 };
 
 struct bgv_key_switch {
-	bgv_Seed seed;
+	tiimat3_Seed seed;
 	bgv_Poly poly[BGV_OMEGA];
 };
 
@@ -67,13 +67,13 @@ void  bgv_decode(bgv_Message *m, const bgv_Poly *p);
 void  bgv_decrypt(size_t idx, bgv_Poly *p, const bgv_KeySecret *sk, bgv_Ciphertext *ct);
 void  bgv_deinit(void);
 void  bgv_encode(size_t idx, bgv_Poly *p, const bgv_Message *m);
-void  bgv_encrypt(size_t idx, bgv_Ciphertext *ct, bgv_KeyPublic *pk, const bgv_Poly *p, bgv_Seed *seed);
+void  bgv_encrypt(size_t idx, bgv_Ciphertext *ct, bgv_KeyPublic *pk, const bgv_Poly *p, tiimat3_Seed *seed);
 void  bgv_init(void);
-void  bgv_keygen_public(size_t idx, bgv_KeyPublic *pk, const bgv_KeySecret *sk, bgv_Seed *seed);
+void  bgv_keygen_public(size_t idx, bgv_KeyPublic *pk, const bgv_KeySecret *sk, tiimat3_Seed *seed);
 void  bgv_keygen_secret(bgv_KeySecret *sk);
-void  bgv_keygen_switch(size_t idx, bgv_KeySwitch *ksw, const bgv_KeySecret *sk, const bgv_KeySecret *sk2, bgv_Seed *seed);
-void  bgv_keygen_switch2(size_t idx, bgv_KeySwitch *ksw, const bgv_KeySecret *sk, bgv_Seed *seed);
-void  bgv_keygen_switchr(size_t idx, bgv_KeySwitch *ksw, const bgv_KeySecret *sk, size_t steps, bgv_Seed *seed);
+void  bgv_keygen_switch(size_t idx, bgv_KeySwitch *ksw, const bgv_KeySecret *sk, const bgv_KeySecret *sk2, tiimat3_Seed *seed);
+void  bgv_keygen_switch2(size_t idx, bgv_KeySwitch *ksw, const bgv_KeySecret *sk, tiimat3_Seed *seed);
+void  bgv_keygen_switchr(size_t idx, bgv_KeySwitch *ksw, const bgv_KeySecret *sk, size_t steps, tiimat3_Seed *seed);
 void  bgv_keyswitch(bgv_Ciphertext *ct, bgv_KeySwitch *ksw, size_t dsw);
 void  bgv_keyswitch_delta(size_t idx, bgv_Delta *delta, bgv_Ciphertext *ct);
 void  bgv_keyswitch_dot(size_t idx, bgv_Ciphertext *ct, bgv_CiphertextSwitch *csw, bgv_KeySwitch *ksw);
@@ -304,7 +304,7 @@ bgv_encode(size_t idx, bgv_Poly *p, const bgv_Message *m)
 }
 
 void
-bgv_encrypt(size_t idx, bgv_Ciphertext *ct, bgv_KeyPublic *pk, const bgv_Poly *p, bgv_Seed *seed)
+bgv_encrypt(size_t idx, bgv_Ciphertext *ct, bgv_KeyPublic *pk, const bgv_Poly *p, tiimat3_Seed *seed)
 {
 	bgv_Poly *coins;
 
@@ -366,14 +366,14 @@ bgv_init(void)
 }
 
 void
-bgv_keygen_public(size_t idx, bgv_KeyPublic *pk, const bgv_KeySecret *sk, bgv_Seed *seed)
+bgv_keygen_public(size_t idx, bgv_KeyPublic *pk, const bgv_KeySecret *sk, tiimat3_Seed *seed)
 {
 	bgv_Poly *p;
 
 	p = bgv_alloc(3, sizeof *p);
 
 	/* sample and init polynomials */
-	bgv_sample_seed(&pk->seed);
+	tiimat3_random_seed(&pk->seed);
 	bgv_poly_sample_uniform(idx, &p[0], &pk->seed);
 	pk->seed.init = 1;
 
@@ -394,14 +394,14 @@ bgv_keygen_public(size_t idx, bgv_KeyPublic *pk, const bgv_KeySecret *sk, bgv_Se
 void
 bgv_keygen_secret(bgv_KeySecret *sk)
 {
-	bgv_Seed seed;
+	tiimat3_Seed seed;
 
-	bgv_sample_seed(&seed);
+	tiimat3_random_seed(&seed);
 	bgv_poly_sample_secret(&sk->poly, &seed);
 }
 
 void
-bgv_keygen_switch(size_t idx, bgv_KeySwitch *ksw, const bgv_KeySecret *sk, const bgv_KeySecret *sk2, bgv_Seed *seed)
+bgv_keygen_switch(size_t idx, bgv_KeySwitch *ksw, const bgv_KeySecret *sk, const bgv_KeySecret *sk2, tiimat3_Seed *seed)
 {
 	bgv_Poly *a, *e, *s;
 	size_t k;
@@ -410,7 +410,7 @@ bgv_keygen_switch(size_t idx, bgv_KeySwitch *ksw, const bgv_KeySecret *sk, const
 	e = bgv_alloc(BGV_OMEGA, sizeof *e);
 	s = bgv_alloc(2, sizeof *s);
 
-	bgv_sample_seed(&ksw->seed);
+	tiimat3_random_seed(&ksw->seed);
 	for (k = 0; k < BGV_OMEGA; ++k) {
 		bgv_poly_sample_uniform(idx, &a[k], &ksw->seed);
 		bgv_poly_neg(idx, &a[k], &a[k]);
@@ -442,7 +442,7 @@ bgv_keygen_switch(size_t idx, bgv_KeySwitch *ksw, const bgv_KeySecret *sk, const
 }
 
 void
-bgv_keygen_switch2(size_t idx, bgv_KeySwitch *ksw, const bgv_KeySecret *sk, bgv_Seed *seed)
+bgv_keygen_switch2(size_t idx, bgv_KeySwitch *ksw, const bgv_KeySecret *sk, tiimat3_Seed *seed)
 {
 	bgv_KeySecret *s;
 
@@ -461,7 +461,7 @@ bgv_keygen_switch2(size_t idx, bgv_KeySwitch *ksw, const bgv_KeySecret *sk, bgv_
 }
 
 void
-bgv_keygen_switchr(size_t idx, bgv_KeySwitch *ksw, const bgv_KeySecret *sk, size_t steps, bgv_Seed *seed)
+bgv_keygen_switchr(size_t idx, bgv_KeySwitch *ksw, const bgv_KeySecret *sk, size_t steps, tiimat3_Seed *seed)
 {
 	bgv_KeySecret *s;
 

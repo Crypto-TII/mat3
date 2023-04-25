@@ -316,24 +316,24 @@ bgv_poly_rot(size_t idx, bgv_Poly *rop, const bgv_Poly *p, size_t steps)
 }
 
 void
-bgv_poly_sample_error(bgv_Poly *e, bgv_Seed *seed)
+bgv_poly_sample_error(bgv_Poly *e, tiimat3_Seed *seed)
 {
 
-	bgv_sample_cbd21_i64((int64_t *)e->value, BGV_D, seed);
+	tiimat3_random_cbd21_i64((int64_t *)e->value, BGV_D, seed);
 }
 
 void
-bgv_poly_sample_secret(bgv_Poly *s, bgv_Seed *seed)
+bgv_poly_sample_secret(bgv_Poly *s, tiimat3_Seed *seed)
 {
 
-	bgv_sample_cbd1_i64((int64_t *)s->value, BGV_D, seed);
+	tiimat3_random_cbd1_i64((int64_t *)s->value, BGV_D, seed);
 }
 
 void
-bgv_poly_sample_uniform(size_t idx, bgv_Poly *p, bgv_Seed *seed)
+bgv_poly_sample_uniform(size_t idx, bgv_Poly *p, tiimat3_Seed *seed)
 {
 
-	bgv_sample_uniform_u64(p->value, BGV_D, bgv_rns[idx], seed);
+	tiimat3_random_uniform_u64(p->value, BGV_D, bgv_rns[idx], seed);
 }
 
 void

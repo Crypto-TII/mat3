@@ -1,13 +1,13 @@
 set(SRC ${PROJECT_SOURCE_DIR}/src)
 include_directories(${SRC})
 
-add_executable(test_random random.c
-	${SRC}/random.h)
+add_executable(test_random random.c)
 target_compile_options(test_random PRIVATE -fsanitize=address)
 target_link_options(test_random PRIVATE -fsanitize=address)
 
 add_executable(test_ring_i64 ring_i64.c
 	${SRC}/ring_i64.h
+	${SRC}/random.h ${SRC}/random.c
 	${SRC}/util.h ${SRC}/util.c)
 target_compile_options(test_ring_i64 PRIVATE -fsanitize=address)
 target_link_libraries(test_ring_i64 gmp)
@@ -23,7 +23,7 @@ target_link_options(test_msg_mpz PRIVATE -fsanitize=address)
 add_executable(test_bgv bgv.c
 	${SRC}/bgv.h
 	${SRC}/msg_mpz.h
-	${SRC}/random.h
+	${SRC}/random.h ${SRC}/random.c
 	${SRC}/util.h ${SRC}/util.c)
 target_compile_options(test_bgv PRIVATE -fsanitize=address)
 target_link_libraries(test_bgv gmp)

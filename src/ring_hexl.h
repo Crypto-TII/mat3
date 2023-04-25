@@ -83,9 +83,9 @@ void bgv_poly_mulcadd(size_t idx, bgv_Poly *rop, const bgv_Poly *op1, const bgv_
 void bgv_poly_neg(size_t idx, bgv_Poly *rop, const bgv_Poly *p);
 void bgv_poly_ntt(size_t idx, bgv_Poly *p);
 void bgv_poly_rot(size_t idx, bgv_Poly *rop, const bgv_Poly *p, size_t steps);
-void bgv_poly_sample_error(bgv_Poly *e, bgv_Seed *seed);
-void bgv_poly_sample_secret(bgv_Poly *s, bgv_Seed *seed);
-void bgv_poly_sample_uniform(size_t idx, bgv_Poly *p, bgv_Seed *seed);
+void bgv_poly_sample_error(bgv_Poly *e, tiimat3_Seed *seed);
+void bgv_poly_sample_secret(bgv_Poly *s, tiimat3_Seed *seed);
+void bgv_poly_sample_uniform(size_t idx, bgv_Poly *p, tiimat3_Seed *seed);
 void bgv_poly_sub(size_t idx, bgv_Poly *rop, const bgv_Poly *op1, const bgv_Poly *op2);
 
 #endif /* BGV_RING_H */
