@@ -1,7 +1,7 @@
 #ifndef TRIPLES_H
 #define TRIPLES_H
 
-#include "libbgv.h"
+#include "bgv.h"
 
 #ifndef TRIPLES_HOIST
 #define TRIPLES_HOIST 1
@@ -38,7 +38,7 @@ struct triples_block {
 };
 
 struct triples_block_ciphertext {
-	bgv_Ciphertext value[TIIMAT3_QPLEN];
+	tiimat3_Ciphertext value[TIIMAT3_QPLEN];
 };
 
 struct triples_matrix_block {
@@ -86,15 +86,15 @@ void triples_matrix_print(const triples_Matrix *op, size_t len);
 
 #ifdef TRIPLES_IMPL
 static gmp_randstate_t randstate;
-static bgv_KeySecret sk;
-static bgv_KeyPublic pk[TIIMAT3_QLEN];
-static bgv_KeySwitch ksw2[TIIMAT3_QPLEN];
-static bgv_KeySwitch *kswA;
-static bgv_KeySwitch *kswAneg;
-static bgv_KeySwitch *kswB;
+static tiimat3_KeySecret sk;
+static tiimat3_KeyPublic pk[TIIMAT3_QLEN];
+static tiimat3_KeySwitch ksw2[TIIMAT3_QPLEN];
+static tiimat3_KeySwitch *kswA;
+static tiimat3_KeySwitch *kswAneg;
+static tiimat3_KeySwitch *kswB;
 
 static mpz_t MAC[TRIPLES_SHARES + 1];
-static bgv_Ciphertext ctMAC[TRIPLES_SHARES + 1][TIIMAT3_QLEN];
+static tiimat3_Ciphertext ctMAC[TRIPLES_SHARES + 1][TIIMAT3_QLEN];
 static tiimat3_Message Uphi[TRIPLES_DIM][2];
 
 static void block_add(triples_Block *rop, const triples_Block *op1, const triples_Block *op2, size_t len);
@@ -123,11 +123,11 @@ static void block_sigma(triples_Block *rop, const triples_Block *op);
 static void block_tau(triples_Block *rop, const triples_Block *op);
 static void block_unpack(triples_Block *vec, const tiimat3_Message *m);
 
-static void ciphertext_cpy(bgv_Ciphertext *rop, bgv_Ciphertext *ct, size_t len);
-static void ciphertext_rotA(bgv_Ciphertext *rop, bgv_Ciphertext *ct);
-static void ciphertext_rotA_hoisted(bgv_Ciphertext *rop, bgv_CiphertextSwitch *csw, int k);
-static void ciphertext_rotB(bgv_Ciphertext *rop, bgv_Ciphertext *ct);
-static void ciphertext_rotB_hoisted(bgv_Ciphertext *rop, bgv_CiphertextSwitch *csw, int k);
+static void ciphertext_cpy(tiimat3_Ciphertext *rop, tiimat3_Ciphertext *ct, size_t len);
+static void ciphertext_rotA(tiimat3_Ciphertext *rop, tiimat3_Ciphertext *ct);
+static void ciphertext_rotA_hoisted(tiimat3_Ciphertext *rop, tiimat3_CiphertextSwitch *csw, int k);
+static void ciphertext_rotB(tiimat3_Ciphertext *rop, tiimat3_Ciphertext *ct);
+static void ciphertext_rotB_hoisted(tiimat3_Ciphertext *rop, tiimat3_CiphertextSwitch *csw, int k);
 
 static triples_MatrixEnc *matrix_alloc_encdim(size_t drow, size_t dcol, size_t len);
 
@@ -158,7 +158,7 @@ block_add_enc(triples_BlockEnc *rop, triples_BlockEnc *op1, triples_BlockEnc *op
 	size_t i;
 
 	for (i = 0; i < TIIMAT3_QLEN; ++i)
-		bgv_add(i, &rop->value[i], &op1->value[i], &op2->value[i]);
+		tiimat3_bgv_add(i, &rop->value[i], &op1->value[i], &op2->value[i]);
 }
 
 static triples_Block *
@@ -167,7 +167,7 @@ block_alloc(size_t len)
 	triples_Block *block;
 	size_t i, row, col;
 
-	block = bgv_alloc(len, sizeof *block);
+	block = tiimat3_util_alloc(len, sizeof *block);
 	for (i = 0; i < len; ++i)
 		for (row = 0; row < TRIPLES_DIM; ++row)
 			for (col = 0; col < TRIPLES_DIM; ++col)
@@ -209,7 +209,7 @@ block_dealloc(triples_Block *op, size_t len)
 		for (row = 0; row < TRIPLES_DIM; ++row)
 			for (col = 0; col < TRIPLES_DIM; ++col)
 				mpz_clear(op[i].value[row][col]);
-	bgv_dealloc(op);
+	tiimat3_util_dealloc(op);
 }
 
 static void
@@ -221,22 +221,22 @@ block_decrypt(triples_Block *rop, triples_BlockEnc *op)
 	size_t i;
 
 	m = tiimat3_alloc_msg(1);
-	p = bgv_alloc(TIIMAT3_QLEN, sizeof *p);
+	p = tiimat3_util_alloc(TIIMAT3_QLEN, sizeof *p);
 	tiimat3_random_seed(&seed);
 
 	for (i = 0; i < TIIMAT3_QLEN; ++i) {
 		if (tiimat3_q[i].drop)
 			continue;
 
-		bgv_decrypt(i, &p[i], &sk, &op->value[i]);
+		tiimat3_bgv_decrypt(i, &p[i], &sk, &op->value[i]);
 		poly_flood(i, &p[i], &seed);
 		seed.init = 1;
 	}
-	bgv_decode(m, p);
+	tiimat3_bgv_decode(m, p);
 	block_unpack(rop, m);
 
 	tiimat3_dealloc_msg(m, 1);
-	bgv_dealloc(p);
+	tiimat3_util_dealloc(p);
 }
 
 static void
@@ -248,17 +248,17 @@ block_encrypt(triples_BlockEnc *rop, const triples_Block *blocks, size_t rot, vo
 	size_t i;
 
 	m = tiimat3_alloc_msg(1);
-	p = bgv_alloc(1, sizeof *p);
+	p = tiimat3_util_alloc(1, sizeof *p);
 	tiimat3_random_seed(&seed);
 
 	block_pack(m, blocks, rot, transform);
 	for (i = 0; i < TIIMAT3_QLEN; ++i) {
-		bgv_encode(i, p, m);
-		bgv_encrypt(i, &rop->value[i], &pk[i], p, &seed);
+		tiimat3_bgv_encode(i, p, m);
+		tiimat3_bgv_encrypt(i, &rop->value[i], &pk[i], p, &seed);
 	}
 
 	tiimat3_dealloc_msg(m, 1);
-	bgv_dealloc(p);
+	tiimat3_util_dealloc(p);
 }
 
 static void
@@ -325,26 +325,26 @@ block_mulc(triples_Block *rop, const triples_Block *op1, const mpz_t op2, size_t
 __attribute__((unused)) static void
 block_mul_enc_hoisted(triples_BlockEnc *rop, triples_BlockEnc *A, triples_BlockEnc *B)
 {
-	bgv_CiphertextSwitch *cswA, *cswB;
-	bgv_Ciphertext *rotA, *rotAneg, *rotB, *ct;
-	bgv_Delta *delta;
+	tiimat3_CiphertextSwitch *cswA, *cswB;
+	tiimat3_Ciphertext *rotA, *rotAneg, *rotB, *ct;
+	tiimat3_Delta *delta;
 	int i, k;
 
-	cswA = bgv_alloc(TIIMAT3_QPLEN, sizeof *cswA);
-	cswB = bgv_alloc(TIIMAT3_QPLEN, sizeof *cswB);
-	rotA = bgv_alloc(TIIMAT3_QPLEN, sizeof *rotA);
-	rotAneg = bgv_alloc(TIIMAT3_QPLEN, sizeof *rotAneg);
-	rotB = bgv_alloc(TIIMAT3_QPLEN, sizeof *rotB);
-	ct = bgv_alloc(2, sizeof *ct);
-	delta = bgv_alloc(2, sizeof *delta);
+	cswA = tiimat3_util_alloc(TIIMAT3_QPLEN, sizeof *cswA);
+	cswB = tiimat3_util_alloc(TIIMAT3_QPLEN, sizeof *cswB);
+	rotA = tiimat3_util_alloc(TIIMAT3_QPLEN, sizeof *rotA);
+	rotAneg = tiimat3_util_alloc(TIIMAT3_QPLEN, sizeof *rotAneg);
+	rotB = tiimat3_util_alloc(TIIMAT3_QPLEN, sizeof *rotB);
+	ct = tiimat3_util_alloc(2, sizeof *ct);
+	delta = tiimat3_util_alloc(2, sizeof *delta);
 
 	/* reset dropped moduli */
 	tiimat3_mod_drop(0, 0);
 	tiimat3_mod_drop(1, 0);
 
 	/* ciphertext extension */
-	bgv_keyswitch_ext(cswA, A->value, 1);
-	bgv_keyswitch_ext(cswB, B->value, 1);
+	tiimat3_bgv_keyswitch_ext(cswA, A->value, 1);
+	tiimat3_bgv_keyswitch_ext(cswB, B->value, 1);
 
 	/* first multiplication */
 	for (i = 0; i < TIIMAT3_QLEN; ++i) {
@@ -352,15 +352,15 @@ block_mul_enc_hoisted(triples_BlockEnc *rop, triples_BlockEnc *A, triples_BlockE
 		ciphertext_cpy(&ct[1], &B->value[i], 1);
 
 		if (i == 0) {
-			bgv_modswitch_delta(0, &delta[0], &ct[0]);
-			bgv_modswitch_delta(0, &delta[1], &ct[1]);
+			tiimat3_bgv_modswitch_delta(0, &delta[0], &ct[0]);
+			tiimat3_bgv_modswitch_delta(0, &delta[1], &ct[1]);
 			continue;
 		} else {
-			bgv_modswitch_ext(i, &ct[0], &delta[0]);
-			bgv_modswitch_ext(i, &ct[1], &delta[1]);
+			tiimat3_bgv_modswitch_ext(i, &ct[0], &delta[0]);
+			tiimat3_bgv_modswitch_ext(i, &ct[1], &delta[1]);
 		}
 
-		bgv_mul(i, &rop->value[i], &ct[0], &ct[1]);
+		tiimat3_bgv_mul(i, &rop->value[i], &ct[0], &ct[1]);
 	}
 
 	/* squared block multiplication */
@@ -373,49 +373,49 @@ block_mul_enc_hoisted(triples_BlockEnc *rop, triples_BlockEnc *A, triples_BlockE
 		for (i = 0; i < TIIMAT3_QLEN; ++i) {
 			tiimat3_Poly p;
 
-			bgv_encode(i, &p, &Uphi[k][0]);
-			bgv_mulc(i, &rotA[i], &rotA[i], &p);
+			tiimat3_bgv_encode(i, &p, &Uphi[k][0]);
+			tiimat3_bgv_mulc(i, &rotA[i], &rotA[i], &p);
 
-			bgv_encode(i, &p, &Uphi[k][1]);
-			bgv_mulc(i, &rotAneg[i], &rotAneg[i], &p);
+			tiimat3_bgv_encode(i, &p, &Uphi[k][1]);
+			tiimat3_bgv_mulc(i, &rotAneg[i], &rotAneg[i], &p);
 
-			bgv_add(i, &rotA[i], &rotA[i], &rotAneg[i]);
+			tiimat3_bgv_add(i, &rotA[i], &rotA[i], &rotAneg[i]);
 
 			if (i == 0) {
-				bgv_modswitch_delta(0, &delta[0], &rotA[0]);
-				bgv_modswitch_delta(0, &delta[1], &rotB[0]);
+				tiimat3_bgv_modswitch_delta(0, &delta[0], &rotA[0]);
+				tiimat3_bgv_modswitch_delta(0, &delta[1], &rotB[0]);
 				continue;
 			} else {
-				bgv_modswitch_ext(i, &rotA[i], &delta[0]);
-				bgv_modswitch_ext(i, &rotB[i], &delta[1]);
+				tiimat3_bgv_modswitch_ext(i, &rotA[i], &delta[0]);
+				tiimat3_bgv_modswitch_ext(i, &rotB[i], &delta[1]);
 			}
 
-			bgv_mul(i, ct, &rotA[i], &rotB[i]);
-			bgv_add(i, &rop->value[i], &rop->value[i], ct);
+			tiimat3_bgv_mul(i, ct, &rotA[i], &rotB[i]);
+			tiimat3_bgv_add(i, &rop->value[i], &rop->value[i], ct);
 		}
 	}
 	tiimat3_mod_drop(0, 2);
 
-	bgv_keyswitch(rop->value, ksw2, 2);
+	tiimat3_bgv_keyswitch(rop->value, ksw2, 2);
 
 	for (i = 1; i < TIIMAT3_QLEN; ++i) {
-		bgv_Delta delta;
+		tiimat3_Delta delta;
 
 		if (i == 1) {
-			bgv_modswitch_delta(1, &delta, &rop->value[1]);
+			tiimat3_bgv_modswitch_delta(1, &delta, &rop->value[1]);
 			continue;
 		} else
-			bgv_modswitch_ext(i, &rop->value[i], &delta);
+			tiimat3_bgv_modswitch_ext(i, &rop->value[i], &delta);
 	}
 	tiimat3_mod_drop(1, 1);
 
-	bgv_dealloc(cswA);
-	bgv_dealloc(cswB);
-	bgv_dealloc(rotA);
-	bgv_dealloc(rotAneg);
-	bgv_dealloc(rotB);
-	bgv_dealloc(ct);
-	bgv_dealloc(delta);
+	tiimat3_util_dealloc(cswA);
+	tiimat3_util_dealloc(cswB);
+	tiimat3_util_dealloc(rotA);
+	tiimat3_util_dealloc(rotAneg);
+	tiimat3_util_dealloc(rotB);
+	tiimat3_util_dealloc(ct);
+	tiimat3_util_dealloc(delta);
 }
 
 __attribute__((unused)) static void
@@ -424,7 +424,7 @@ block_mul_enc_prerot(triples_BlockEnc *rop, triples_BlockEnc *A1, triples_BlockE
 	triples_BlockEnc *mul;
 	size_t i, k;
 
-	mul = bgv_alloc(TRIPLES_DIM, sizeof *mul);
+	mul = tiimat3_util_alloc(TRIPLES_DIM, sizeof *mul);
 
 	/* reset dropped moduli */
 	tiimat3_mod_drop(0, 0);
@@ -433,12 +433,12 @@ block_mul_enc_prerot(triples_BlockEnc *rop, triples_BlockEnc *A1, triples_BlockE
 	/* squared block multiplication */
 	#pragma omp parallel for
 	for (k = 0; k < TRIPLES_DIM; ++k) {
-		bgv_Ciphertext *ct;
-		bgv_Delta *delta;
+		tiimat3_Ciphertext *ct;
+		tiimat3_Delta *delta;
 		size_t i;
 
-		ct = bgv_alloc(2, sizeof *ct);
-		delta = bgv_alloc(2, sizeof *delta);
+		ct = tiimat3_util_alloc(2, sizeof *ct);
+		delta = tiimat3_util_alloc(2, sizeof *delta);
 
 		if (k == 0) {
 			for (i = 0; i < TIIMAT3_QLEN; ++i) {
@@ -446,79 +446,79 @@ block_mul_enc_prerot(triples_BlockEnc *rop, triples_BlockEnc *A1, triples_BlockE
 				ciphertext_cpy(&ct[1], &B[0].value[i], 1);
 
 				if (i == 0) {
-					bgv_modswitch_delta(0, &delta[0], &ct[0]);
-					bgv_modswitch_delta(0, &delta[1], &ct[1]);
+					tiimat3_bgv_modswitch_delta(0, &delta[0], &ct[0]);
+					tiimat3_bgv_modswitch_delta(0, &delta[1], &ct[1]);
 				} else {
-					bgv_modswitch_ext(i, &ct[0], &delta[0]);
-					bgv_modswitch_ext(i, &ct[1], &delta[1]);
-					bgv_mul(i, &mul[k].value[i], &ct[0], &ct[1]);
+					tiimat3_bgv_modswitch_ext(i, &ct[0], &delta[0]);
+					tiimat3_bgv_modswitch_ext(i, &ct[1], &delta[1]);
+					tiimat3_bgv_mul(i, &mul[k].value[i], &ct[0], &ct[1]);
 				}
 			}
 		} else {
 			for (i = 0; i < TIIMAT3_QLEN; ++i) {
 				tiimat3_Poly p;
 
-				bgv_encode(i, &p, &Uphi[k][0]);
-				bgv_mulc(i, &ct[0], &A2[k].value[i], &p);
+				tiimat3_bgv_encode(i, &p, &Uphi[k][0]);
+				tiimat3_bgv_mulc(i, &ct[0], &A2[k].value[i], &p);
 
-				bgv_encode(i, &p, &Uphi[k][1]);
-				bgv_mulc(i, &ct[1], &A1[k].value[i], &p);
+				tiimat3_bgv_encode(i, &p, &Uphi[k][1]);
+				tiimat3_bgv_mulc(i, &ct[1], &A1[k].value[i], &p);
 
-				bgv_add(i, &ct[0], &ct[0], &ct[1]);
+				tiimat3_bgv_add(i, &ct[0], &ct[0], &ct[1]);
 				ciphertext_cpy(&ct[1], &B[k].value[i], 1);
 
 				if (i == 0) {
-					bgv_modswitch_delta(0, &delta[0], &ct[0]);
-					bgv_modswitch_delta(0, &delta[1], &ct[1]);
+					tiimat3_bgv_modswitch_delta(0, &delta[0], &ct[0]);
+					tiimat3_bgv_modswitch_delta(0, &delta[1], &ct[1]);
 				} else {
-					bgv_modswitch_ext(i, &ct[0], &delta[0]);
-					bgv_modswitch_ext(i, &ct[1], &delta[1]);
-					bgv_mul(i, &mul[k].value[i], &ct[0], &ct[1]);
+					tiimat3_bgv_modswitch_ext(i, &ct[0], &delta[0]);
+					tiimat3_bgv_modswitch_ext(i, &ct[1], &delta[1]);
+					tiimat3_bgv_mul(i, &mul[k].value[i], &ct[0], &ct[1]);
 				}
 			}
 		}
 
-		bgv_dealloc(ct);
-		bgv_dealloc(delta);
+		tiimat3_util_dealloc(ct);
+		tiimat3_util_dealloc(delta);
 	}
 
 	for (k = 1; k < TRIPLES_DIM; ++k) {
 		for (i = 0; i < TIIMAT3_QLEN; ++i) {
 			if (k == 1)
-				bgv_add(i, &rop->value[i], &mul[0].value[i], &mul[1].value[i]);
+				tiimat3_bgv_add(i, &rop->value[i], &mul[0].value[i], &mul[1].value[i]);
 			else
-				bgv_add(i, &rop->value[i], &rop->value[i], &mul[k].value[i]);
+				tiimat3_bgv_add(i, &rop->value[i], &rop->value[i], &mul[k].value[i]);
 		}
 	}
 	tiimat3_mod_drop(0, 2);
-	bgv_keyswitch(rop->value, ksw2, 2);
+	tiimat3_bgv_keyswitch(rop->value, ksw2, 2);
 
 	for (i = 1; i < TIIMAT3_QLEN; ++i) {
-		bgv_Delta delta;
+		tiimat3_Delta delta;
 
 		if (i == 1) {
-			bgv_modswitch_delta(1, &delta, &rop->value[1]);
+			tiimat3_bgv_modswitch_delta(1, &delta, &rop->value[1]);
 			continue;
 		} else
-			bgv_modswitch_ext(i, &rop->value[i], &delta);
+			tiimat3_bgv_modswitch_ext(i, &rop->value[i], &delta);
 	}
 	tiimat3_mod_drop(1, 1);
 
-	bgv_dealloc(mul);
+	tiimat3_util_dealloc(mul);
 }
 
 __attribute__((unused)) static void
 block_mul_enc_reuse(triples_BlockEnc *rop, triples_BlockEnc *A, triples_BlockEnc *B)
 {
-	bgv_Ciphertext *rotA1, *rotA2, *rotB, *ct;
-	bgv_Delta *delta;
+	tiimat3_Ciphertext *rotA1, *rotA2, *rotB, *ct;
+	tiimat3_Delta *delta;
 	size_t i, k;
 
-	delta = bgv_alloc(2, sizeof *delta);
-	rotA1 = bgv_alloc(TIIMAT3_QPLEN, sizeof *rotA1);
-	rotA2 = bgv_alloc(TIIMAT3_QPLEN, sizeof *rotA2);
-	rotB = bgv_alloc(TIIMAT3_QPLEN, sizeof *rotB);
-	ct = bgv_alloc(2, sizeof *ct);
+	delta = tiimat3_util_alloc(2, sizeof *delta);
+	rotA1 = tiimat3_util_alloc(TIIMAT3_QPLEN, sizeof *rotA1);
+	rotA2 = tiimat3_util_alloc(TIIMAT3_QPLEN, sizeof *rotA2);
+	rotB = tiimat3_util_alloc(TIIMAT3_QPLEN, sizeof *rotB);
+	ct = tiimat3_util_alloc(2, sizeof *ct);
 
 	/* reset dropped moduli */
 	tiimat3_mod_drop(0, 0);
@@ -535,15 +535,15 @@ block_mul_enc_reuse(triples_BlockEnc *rop, triples_BlockEnc *A, triples_BlockEnc
 		ciphertext_cpy(&ct[1], &rotB[i], 1);
 
 		if (i == 0) {
-			bgv_modswitch_delta(0, &delta[0], &ct[0]);
-			bgv_modswitch_delta(0, &delta[1], &ct[1]);
+			tiimat3_bgv_modswitch_delta(0, &delta[0], &ct[0]);
+			tiimat3_bgv_modswitch_delta(0, &delta[1], &ct[1]);
 			continue;
 		} else {
-			bgv_modswitch_ext(i, &ct[0], &delta[0]);
-			bgv_modswitch_ext(i, &ct[1], &delta[1]);
+			tiimat3_bgv_modswitch_ext(i, &ct[0], &delta[0]);
+			tiimat3_bgv_modswitch_ext(i, &ct[1], &delta[1]);
 		}
 
-		bgv_mul(i, &rop->value[i], &ct[0], &ct[1]);
+		tiimat3_bgv_mul(i, &rop->value[i], &ct[0], &ct[1]);
 	}
 
 	/* squared block multiplication */
@@ -556,48 +556,48 @@ block_mul_enc_reuse(triples_BlockEnc *rop, triples_BlockEnc *A, triples_BlockEnc
 		for (i = 0; i < TIIMAT3_QLEN; ++i) {
 			tiimat3_Poly p;
 
-			bgv_encode(i, &p, &Uphi[k][0]);
-			bgv_mulc(i, &ct[0], &rotA2[i], &p);
+			tiimat3_bgv_encode(i, &p, &Uphi[k][0]);
+			tiimat3_bgv_mulc(i, &ct[0], &rotA2[i], &p);
 
-			bgv_encode(i, &p, &Uphi[k][1]);
-			bgv_mulc(i, &ct[1], &rotA1[i], &p);
+			tiimat3_bgv_encode(i, &p, &Uphi[k][1]);
+			tiimat3_bgv_mulc(i, &ct[1], &rotA1[i], &p);
 
-			bgv_add(i, &ct[0], &ct[0], &ct[1]);
+			tiimat3_bgv_add(i, &ct[0], &ct[0], &ct[1]);
 			ciphertext_cpy(&ct[1], &rotB[i], 1);
 
 			if (i == 0) {
-				bgv_modswitch_delta(0, &delta[0], &ct[0]);
-				bgv_modswitch_delta(0, &delta[1], &ct[1]);
+				tiimat3_bgv_modswitch_delta(0, &delta[0], &ct[0]);
+				tiimat3_bgv_modswitch_delta(0, &delta[1], &ct[1]);
 				continue;
 			} else {
-				bgv_modswitch_ext(i, &ct[0], &delta[0]);
-				bgv_modswitch_ext(i, &ct[1], &delta[1]);
+				tiimat3_bgv_modswitch_ext(i, &ct[0], &delta[0]);
+				tiimat3_bgv_modswitch_ext(i, &ct[1], &delta[1]);
 			}
 
-			bgv_mul(i, &ct[0], &ct[0], &ct[1]);
-			bgv_add(i, &rop->value[i], &rop->value[i], &ct[0]);
+			tiimat3_bgv_mul(i, &ct[0], &ct[0], &ct[1]);
+			tiimat3_bgv_add(i, &rop->value[i], &rop->value[i], &ct[0]);
 		}
 	}
 	tiimat3_mod_drop(0, 2);
 
-	bgv_keyswitch(rop->value, ksw2, 2);
+	tiimat3_bgv_keyswitch(rop->value, ksw2, 2);
 
 	for (i = 1; i < TIIMAT3_QLEN; ++i) {
-		bgv_Delta delta;
+		tiimat3_Delta delta;
 
 		if (i == 1) {
-			bgv_modswitch_delta(1, &delta, &rop->value[1]);
+			tiimat3_bgv_modswitch_delta(1, &delta, &rop->value[1]);
 			continue;
 		} else
-			bgv_modswitch_ext(i, &rop->value[i], &delta);
+			tiimat3_bgv_modswitch_ext(i, &rop->value[i], &delta);
 	}
 	tiimat3_mod_drop(1, 1);
 
-	bgv_dealloc(delta);
-	bgv_dealloc(rotA1);
-	bgv_dealloc(rotA2);
-	bgv_dealloc(rotB);
-	bgv_dealloc(ct);
+	tiimat3_util_dealloc(delta);
+	tiimat3_util_dealloc(rotA1);
+	tiimat3_util_dealloc(rotA2);
+	tiimat3_util_dealloc(rotB);
+	tiimat3_util_dealloc(ct);
 }
 
 static void
@@ -639,11 +639,11 @@ block_pack(tiimat3_Message *m, const triples_Block *op, size_t rot, void (*trans
 __attribute__((unused)) static void
 block_prerotA_enc_hoisted(triples_BlockEnc *rotA1, triples_BlockEnc *rotA2, triples_BlockEnc *A)
 {
-	bgv_CiphertextSwitch *csw;
+	tiimat3_CiphertextSwitch *csw;
 	size_t k;
 
-	csw = bgv_alloc(TIIMAT3_QPLEN, sizeof *csw);
-	bgv_keyswitch_ext(csw, A->value, 1);
+	csw = tiimat3_util_alloc(TIIMAT3_QPLEN, sizeof *csw);
+	tiimat3_bgv_keyswitch_ext(csw, A->value, 1);
 
 	#pragma omp parallel for
 	for (k = 0; k < TRIPLES_DIM; ++k) {
@@ -655,20 +655,20 @@ block_prerotA_enc_hoisted(triples_BlockEnc *rotA1, triples_BlockEnc *rotA2, trip
 		}
 	}
 
-	bgv_dealloc(csw);
+	tiimat3_util_dealloc(csw);
 }
 
 __attribute__((unused)) static void
 block_prerotA_enc_mixed(triples_BlockEnc *rotA1, triples_BlockEnc *rotA2, triples_BlockEnc *A)
 {
-	bgv_CiphertextSwitch *csw;
+	tiimat3_CiphertextSwitch *csw;
 	size_t k1, k2;
 
-	csw = bgv_alloc(TIIMAT3_QPLEN, sizeof *csw);
+	csw = tiimat3_util_alloc(TIIMAT3_QPLEN, sizeof *csw);
 	ciphertext_cpy(rotA2[0].value, A->value, TIIMAT3_QPLEN);
 
 	for (k1 = 0; k1 < TRIPLES_DIM / TRIPLES_THREADS; ++k1) {
-		bgv_keyswitch_ext(csw, rotA2[k1 * TRIPLES_THREADS].value, 1);
+		tiimat3_bgv_keyswitch_ext(csw, rotA2[k1 * TRIPLES_THREADS].value, 1);
 
 		#pragma omp parallel for
 		for (k2 = 1; k2 <= TRIPLES_THREADS; ++k2) {
@@ -681,7 +681,7 @@ block_prerotA_enc_mixed(triples_BlockEnc *rotA1, triples_BlockEnc *rotA2, triple
 		}
 	}
 
-	bgv_dealloc(csw);
+	tiimat3_util_dealloc(csw);
 }
 
 
@@ -702,11 +702,11 @@ block_prerotA_enc_reuse(triples_BlockEnc *rotA1, triples_BlockEnc *rotA2, triple
 __attribute__((unused)) static void
 block_prerotB_enc_hoisted(triples_BlockEnc *rotB, triples_BlockEnc *B)
 {
-	bgv_CiphertextSwitch *csw;
+	tiimat3_CiphertextSwitch *csw;
 	size_t k;
 
-	csw = bgv_alloc(TIIMAT3_QPLEN, sizeof *csw);
-	bgv_keyswitch_ext(csw, B->value, 1);
+	csw = tiimat3_util_alloc(TIIMAT3_QPLEN, sizeof *csw);
+	tiimat3_bgv_keyswitch_ext(csw, B->value, 1);
 
 	#pragma omp parallel for
 	for (k = 0; k < TRIPLES_DIM; ++k)
@@ -715,20 +715,20 @@ block_prerotB_enc_hoisted(triples_BlockEnc *rotB, triples_BlockEnc *B)
 		else
 			ciphertext_rotB_hoisted(rotB[k].value, csw, k);
 
-	bgv_dealloc(csw);
+	tiimat3_util_dealloc(csw);
 }
 
 __attribute__((unused)) static void
 block_prerotB_enc_mixed(triples_BlockEnc *rotB, triples_BlockEnc *B)
 {
-	bgv_CiphertextSwitch *csw;
+	tiimat3_CiphertextSwitch *csw;
 	size_t k1, k2;
 
-	csw = bgv_alloc(TIIMAT3_QPLEN, sizeof *csw);
+	csw = tiimat3_util_alloc(TIIMAT3_QPLEN, sizeof *csw);
 	ciphertext_cpy(rotB[0].value, B->value, TIIMAT3_QPLEN);
 
 	for (k1 = 0; k1 < TRIPLES_DIM / TRIPLES_THREADS; ++k1) {
-		bgv_keyswitch_ext(csw, rotB[k1 * TRIPLES_THREADS].value, 1);
+		tiimat3_bgv_keyswitch_ext(csw, rotB[k1 * TRIPLES_THREADS].value, 1);
 
 		#pragma omp parallel for
 		for (k2 = 1; k2 <= TRIPLES_THREADS; ++k2) {
@@ -740,7 +740,7 @@ block_prerotB_enc_mixed(triples_BlockEnc *rotB, triples_BlockEnc *B)
 		}
 	}
 
-	bgv_dealloc(csw);
+	tiimat3_util_dealloc(csw);
 }
 
 
@@ -818,99 +818,99 @@ block_unpack(triples_Block *vec, const tiimat3_Message *m)
 }
 
 static void
-ciphertext_cpy(bgv_Ciphertext *rop, bgv_Ciphertext *ct, size_t len)
+ciphertext_cpy(tiimat3_Ciphertext *rop, tiimat3_Ciphertext *ct, size_t len)
 {
 
 	memcpy(rop, ct, len * sizeof *ct);
 }
 
 static void
-ciphertext_rotA(bgv_Ciphertext *rop, bgv_Ciphertext *ct)
+ciphertext_rotA(tiimat3_Ciphertext *rop, tiimat3_Ciphertext *ct)
 {
 	size_t i;
 
 	if (rop == ct) {
 		for (i = 0; i < TIIMAT3_QLEN; ++i)
-			bgv_rot_inplace(i, &ct[i], TRIPLES_ROTA);
+			tiimat3_bgv_rot_inplace(i, &ct[i], TRIPLES_ROTA);
 	} else {
 		for (i = 0; i < TIIMAT3_QLEN; ++i)
-			bgv_rot(i, &rop[i], &ct[i], TRIPLES_ROTA);
+			tiimat3_bgv_rot(i, &rop[i], &ct[i], TRIPLES_ROTA);
 	}
 
-	bgv_keyswitch(rop, &kswA[TIIMAT3_QPLEN], 1);
+	tiimat3_bgv_keyswitch(rop, &kswA[TIIMAT3_QPLEN], 1);
 }
 
 static void
-ciphertext_rotA_hoisted(bgv_Ciphertext *rop, bgv_CiphertextSwitch *csw, int k)
+ciphertext_rotA_hoisted(tiimat3_Ciphertext *rop, tiimat3_CiphertextSwitch *csw, int k)
 {
-	bgv_CiphertextSwitch *cswr;
-	bgv_Delta *delta;
+	tiimat3_CiphertextSwitch *cswr;
+	tiimat3_Delta *delta;
 	size_t i;
 
-	cswr = bgv_alloc(1, sizeof *cswr);
-	delta = bgv_alloc(TIIMAT3_PLEN, sizeof *delta);
+	cswr = tiimat3_util_alloc(1, sizeof *cswr);
+	delta = tiimat3_util_alloc(TIIMAT3_PLEN, sizeof *delta);
 
 	if (k < 0) {
 		k = -k;
 		for (i = 0; i < TIIMAT3_QPLEN; ++i) {
-			bgv_rot_csw(i, cswr, &csw[i], TIIMAT3_D / 2 - TRIPLES_ROTB + k * TRIPLES_ROTA);
-			bgv_keyswitch_dot(i, &rop[i], cswr, &kswAneg[k * TIIMAT3_QPLEN + i]);
+			tiimat3_bgv_rot_csw(i, cswr, &csw[i], TIIMAT3_D / 2 - TRIPLES_ROTB + k * TRIPLES_ROTA);
+			tiimat3_bgv_keyswitch_dot(i, &rop[i], cswr, &kswAneg[k * TIIMAT3_QPLEN + i]);
 		}
 	} else {
 		for (i = 0; i < TIIMAT3_QPLEN; ++i) {
-			bgv_rot_csw(i, cswr, &csw[i], k * TRIPLES_ROTA);
-			bgv_keyswitch_dot(i, &rop[i], cswr, &kswA[k * TIIMAT3_QPLEN + i]);
+			tiimat3_bgv_rot_csw(i, cswr, &csw[i], k * TRIPLES_ROTA);
+			tiimat3_bgv_keyswitch_dot(i, &rop[i], cswr, &kswA[k * TIIMAT3_QPLEN + i]);
 		}
 	}
 
 	for (i = TIIMAT3_QLEN; i < TIIMAT3_QPLEN; ++i)
-		bgv_keyswitch_delta(i, &delta[i - TIIMAT3_QLEN], &rop[i]);
+		tiimat3_bgv_keyswitch_delta(i, &delta[i - TIIMAT3_QLEN], &rop[i]);
 	for (i = 0; i < TIIMAT3_QLEN; ++i)
-		bgv_keyswitch_switch(i, &rop[i], delta);
+		tiimat3_bgv_keyswitch_switch(i, &rop[i], delta);
 
-	bgv_dealloc(cswr);
-	bgv_dealloc(delta);
+	tiimat3_util_dealloc(cswr);
+	tiimat3_util_dealloc(delta);
 }
 
 static void
-ciphertext_rotB(bgv_Ciphertext *rop, bgv_Ciphertext *ct)
+ciphertext_rotB(tiimat3_Ciphertext *rop, tiimat3_Ciphertext *ct)
 {
 	size_t i;
 
 	if (rop == ct) {
 		for (i = 0; i < TIIMAT3_QLEN; ++i)
-			bgv_rot_inplace(i, &ct[i], TRIPLES_ROTB);
+			tiimat3_bgv_rot_inplace(i, &ct[i], TRIPLES_ROTB);
 	} else {
 		for (i = 0; i < TIIMAT3_QLEN; ++i)
-			bgv_rot(i, &rop[i], &ct[i], TRIPLES_ROTB);
+			tiimat3_bgv_rot(i, &rop[i], &ct[i], TRIPLES_ROTB);
 	}
 
-	bgv_keyswitch(rop, &kswB[TIIMAT3_QPLEN], 1);
+	tiimat3_bgv_keyswitch(rop, &kswB[TIIMAT3_QPLEN], 1);
 }
 
 static void
-ciphertext_rotB_hoisted(bgv_Ciphertext *rop, bgv_CiphertextSwitch *csw, int k)
+ciphertext_rotB_hoisted(tiimat3_Ciphertext *rop, tiimat3_CiphertextSwitch *csw, int k)
 {
-	bgv_CiphertextSwitch *cswr;
-	bgv_Delta *delta;
+	tiimat3_CiphertextSwitch *cswr;
+	tiimat3_Delta *delta;
 	size_t i;
 
-	cswr = bgv_alloc(1, sizeof *cswr);
-	delta = bgv_alloc(TIIMAT3_PLEN, sizeof *delta);
+	cswr = tiimat3_util_alloc(1, sizeof *cswr);
+	delta = tiimat3_util_alloc(TIIMAT3_PLEN, sizeof *delta);
 
 
 	for (i = 0; i < TIIMAT3_QPLEN; ++i) {
-		bgv_rot_csw(i, cswr, &csw[i], k * TRIPLES_ROTB);
-		bgv_keyswitch_dot(i, &rop[i], cswr, &kswB[k * TIIMAT3_QPLEN + i]);
+		tiimat3_bgv_rot_csw(i, cswr, &csw[i], k * TRIPLES_ROTB);
+		tiimat3_bgv_keyswitch_dot(i, &rop[i], cswr, &kswB[k * TIIMAT3_QPLEN + i]);
 	}
 
 	for (i = TIIMAT3_QLEN; i < TIIMAT3_QPLEN; ++i)
-		bgv_keyswitch_delta(i, &delta[i - TIIMAT3_QLEN], &rop[i]);
+		tiimat3_bgv_keyswitch_delta(i, &delta[i - TIIMAT3_QLEN], &rop[i]);
 	for (i = 0; i < TIIMAT3_QLEN; ++i)
-		bgv_keyswitch_switch(i, &rop[i], delta);
+		tiimat3_bgv_keyswitch_switch(i, &rop[i], delta);
 
-	bgv_dealloc(cswr);
-	bgv_dealloc(delta);
+	tiimat3_util_dealloc(cswr);
+	tiimat3_util_dealloc(delta);
 }
 
 static triples_MatrixEnc *
@@ -919,9 +919,9 @@ matrix_alloc_encdim(size_t drow, size_t dcol, size_t len)
 	triples_MatrixEnc *mat;
 	size_t i;
 
-	mat = bgv_alloc(len, sizeof *mat);
+	mat = tiimat3_util_alloc(len, sizeof *mat);
 	for (i = 0; i < len; ++i) {
-		mat[i].value = bgv_alloc(drow * dcol * TRIPLES_DIM, sizeof *mat[i].value);
+		mat[i].value = tiimat3_util_alloc(drow * dcol * TRIPLES_DIM, sizeof *mat[i].value);
 		mat[i].drow = drow;
 		mat[i].dcol = dcol;
 	}
@@ -1001,7 +1001,7 @@ poly_flood(size_t idx, tiimat3_Poly *p, tiimat3_Seed *seed)
 	mpz_t tmp;
 	size_t j;
 
-	e = bgv_alloc(1, sizeof *e);
+	e = tiimat3_util_alloc(1, sizeof *e);
 	mpz_init(tmp);
 
 	for (j = 0; j < TIIMAT3_D; ++j) {
@@ -1015,7 +1015,7 @@ poly_flood(size_t idx, tiimat3_Poly *p, tiimat3_Seed *seed)
 	tiimat3_poly_init_error(idx, e, e);
 	tiimat3_poly_add(idx, p, p, e);
 
-	bgv_dealloc(e);
+	tiimat3_util_dealloc(e);
 	mpz_clear(tmp);
 }
 
@@ -1024,12 +1024,12 @@ triples_deinit(void)
 {
 	size_t i, k;
 
-	bgv_deinit();
+	tiimat3_bgv_deinit();
 	gmp_randclear(randstate);
 
-	bgv_dealloc(kswA);
-	bgv_dealloc(kswAneg);
-	bgv_dealloc(kswB);
+	tiimat3_util_dealloc(kswA);
+	tiimat3_util_dealloc(kswAneg);
+	tiimat3_util_dealloc(kswB);
 
 	for (i = 0; i <= TRIPLES_SHARES; ++i)
 		mpz_clear(MAC[i]);
@@ -1061,21 +1061,21 @@ triples_init(void)
 	tiimat3_Poly p;
 	size_t i, j, k;
 
-	bgv_init();
+	tiimat3_bgv_init();
 	gmp_randinit_default(randstate);
 
 	#if TRIPLES_HOIST
-	kswA = bgv_alloc(TRIPLES_DIM * TIIMAT3_QPLEN, sizeof *kswA);
-	kswAneg = bgv_alloc(TRIPLES_DIM * TIIMAT3_QPLEN, sizeof *kswAneg);
-	kswB = bgv_alloc(TRIPLES_DIM * TIIMAT3_QPLEN, sizeof *kswB);
+	kswA = tiimat3_util_alloc(TRIPLES_DIM * TIIMAT3_QPLEN, sizeof *kswA);
+	kswAneg = tiimat3_util_alloc(TRIPLES_DIM * TIIMAT3_QPLEN, sizeof *kswAneg);
+	kswB = tiimat3_util_alloc(TRIPLES_DIM * TIIMAT3_QPLEN, sizeof *kswB);
 	#elif TRIPLES_MIXED
-	kswA = bgv_alloc((TRIPLES_THREADS + 1) * TIIMAT3_QPLEN, sizeof *kswA);
-	kswAneg = bgv_alloc((TRIPLES_THREADS + 1) * TIIMAT3_QPLEN, sizeof *kswAneg);
-	kswB = bgv_alloc((TRIPLES_THREADS + 1) * TIIMAT3_QPLEN, sizeof *kswB);
+	kswA = tiimat3_util_alloc((TRIPLES_THREADS + 1) * TIIMAT3_QPLEN, sizeof *kswA);
+	kswAneg = tiimat3_util_alloc((TRIPLES_THREADS + 1) * TIIMAT3_QPLEN, sizeof *kswAneg);
+	kswB = tiimat3_util_alloc((TRIPLES_THREADS + 1) * TIIMAT3_QPLEN, sizeof *kswB);
 	#else
-	kswA = bgv_alloc(2 * TIIMAT3_QPLEN, sizeof *kswA);
-	kswAneg = bgv_alloc(2 * TIIMAT3_QPLEN, sizeof *kswAneg);
-	kswB = bgv_alloc(2 * TIIMAT3_QPLEN, sizeof *kswB);
+	kswA = tiimat3_util_alloc(2 * TIIMAT3_QPLEN, sizeof *kswA);
+	kswAneg = tiimat3_util_alloc(2 * TIIMAT3_QPLEN, sizeof *kswAneg);
+	kswB = tiimat3_util_alloc(2 * TIIMAT3_QPLEN, sizeof *kswB);
 	#endif /* TRIPLES_HOIST */
 
 	for (i = 0; i <= TRIPLES_SHARES; ++i)
@@ -1086,25 +1086,25 @@ triples_init(void)
 	}
 
 	/* BGV keys */
-	bgv_keygen_secret(&sk);
+	tiimat3_bgv_keygen_secret(&sk);
 	tiimat3_random_seed(seed);
 	for (i = 0; i < TIIMAT3_QLEN; ++i)
-		bgv_keygen_public(i, &pk[i], &sk, seed);
+		tiimat3_bgv_keygen_public(i, &pk[i], &sk, seed);
 
 	for (i = 0; i < TIIMAT3_QPLEN; ++i)
 		tiimat3_random_seed(&seed[i]);
 	for (i = 0; i < TIIMAT3_QPLEN; ++i)
-		bgv_keygen_switchr(i, &kswA[TIIMAT3_QPLEN + i], &sk, TRIPLES_ROTA, seed);
+		tiimat3_bgv_keygen_switchr(i, &kswA[TIIMAT3_QPLEN + i], &sk, TRIPLES_ROTA, seed);
 
 	for (i = 0; i < TIIMAT3_QPLEN; ++i)
 		tiimat3_random_seed(&seed[i]);
 	for (i = 0; i < TIIMAT3_QPLEN; ++i)
-		bgv_keygen_switchr(i, &kswB[TIIMAT3_QPLEN + i], &sk, TRIPLES_ROTB, seed);
+		tiimat3_bgv_keygen_switchr(i, &kswB[TIIMAT3_QPLEN + i], &sk, TRIPLES_ROTB, seed);
 
 	for (i = 0; i < TIIMAT3_QPLEN; ++i)
 		tiimat3_random_seed(&seed[i]);
 	for (i = 0; i < TIIMAT3_QPLEN; ++i)
-		bgv_keygen_switch2(i, &ksw2[i], &sk, seed);
+		tiimat3_bgv_keygen_switch2(i, &ksw2[i], &sk, seed);
 
 	/* MAC key */
 	m = tiimat3_alloc_msg(1);
@@ -1120,9 +1120,9 @@ triples_init(void)
 
 		tiimat3_random_seed(seed);
 		for (j = 0; j < TIIMAT3_QLEN; ++j) {
-			bgv_encode(j, &p, m);
-			bgv_encrypt(j, &ctMAC[i][j], &pk[j], &p, seed);
-			bgv_add(j, &ctMAC[0][j], &ctMAC[0][j], &ctMAC[i][j]);
+			tiimat3_bgv_encode(j, &p, m);
+			tiimat3_bgv_encrypt(j, &ctMAC[i][j], &pk[j], &p, seed);
+			tiimat3_bgv_add(j, &ctMAC[0][j], &ctMAC[0][j], &ctMAC[i][j]);
 		}
 	}
 	tiimat3_dealloc_msg(m, 1);
@@ -1155,21 +1155,21 @@ triples_init_hoisted(void)
 		for (i = 0; i < TIIMAT3_QPLEN; ++i)
 			tiimat3_random_seed(&seed[i]);
 		for (i = 0; i < TIIMAT3_QPLEN; ++i)
-			bgv_keygen_switchr(i, &kswA[k * TIIMAT3_QPLEN + i], &sk, k * TRIPLES_ROTA, seed);
+			tiimat3_bgv_keygen_switchr(i, &kswA[k * TIIMAT3_QPLEN + i], &sk, k * TRIPLES_ROTA, seed);
 	}
 
 	for (k = 1; k < TRIPLES_DIM; ++k) {
 		for (i = 0; i < TIIMAT3_QPLEN; ++i)
 			tiimat3_random_seed(&seed[i]);
 		for (i = 0; i < TIIMAT3_QPLEN; ++i)
-			bgv_keygen_switchr(i, &kswAneg[k * TIIMAT3_QPLEN + i], &sk, TIIMAT3_D / 2 - TRIPLES_ROTB + k * TRIPLES_ROTA, seed);
+			tiimat3_bgv_keygen_switchr(i, &kswAneg[k * TIIMAT3_QPLEN + i], &sk, TIIMAT3_D / 2 - TRIPLES_ROTB + k * TRIPLES_ROTA, seed);
 	}
 
 	for (k = 2; k < TRIPLES_DIM; ++k) {
 		for (i = 0; i < TIIMAT3_QPLEN; ++i)
 			tiimat3_random_seed(&seed[i]);
 		for (i = 0; i < TIIMAT3_QPLEN; ++i)
-			bgv_keygen_switchr(i, &kswB[k * TIIMAT3_QPLEN + i], &sk, k * TRIPLES_ROTB, seed);
+			tiimat3_bgv_keygen_switchr(i, &kswB[k * TIIMAT3_QPLEN + i], &sk, k * TRIPLES_ROTB, seed);
 	}
 }
 
@@ -1183,21 +1183,21 @@ triples_init_mixed(void)
 		for (i = 0; i < TIIMAT3_QPLEN; ++i)
 			tiimat3_random_seed(&seed[i]);
 		for (i = 0; i < TIIMAT3_QPLEN; ++i)
-			bgv_keygen_switchr(i, &kswA[k * TIIMAT3_QPLEN + i], &sk, k * TRIPLES_ROTA, seed);
+			tiimat3_bgv_keygen_switchr(i, &kswA[k * TIIMAT3_QPLEN + i], &sk, k * TRIPLES_ROTA, seed);
 	}
 
 	for (k = 1; k <= TRIPLES_THREADS; ++k) {
 		for (i = 0; i < TIIMAT3_QPLEN; ++i)
 			tiimat3_random_seed(&seed[i]);
 		for (i = 0; i < TIIMAT3_QPLEN; ++i)
-			bgv_keygen_switchr(i, &kswAneg[k * TIIMAT3_QPLEN + i], &sk, TIIMAT3_D / 2 - TRIPLES_ROTB + k * TRIPLES_ROTA, seed);
+			tiimat3_bgv_keygen_switchr(i, &kswAneg[k * TIIMAT3_QPLEN + i], &sk, TIIMAT3_D / 2 - TRIPLES_ROTB + k * TRIPLES_ROTA, seed);
 	}
 
 	for (k = 2; k <= TRIPLES_THREADS; ++k) {
 		for (i = 0; i < TIIMAT3_QPLEN; ++i)
 			tiimat3_random_seed(&seed[i]);
 		for (i = 0; i < TIIMAT3_QPLEN; ++i)
-			bgv_keygen_switchr(i, &kswB[k * TIIMAT3_QPLEN + i], &sk, k * TRIPLES_ROTB, seed);
+			tiimat3_bgv_keygen_switchr(i, &kswB[k * TIIMAT3_QPLEN + i], &sk, k * TRIPLES_ROTB, seed);
 	}
 }
 
@@ -1241,7 +1241,7 @@ triples_matrix_alloc(size_t drow, size_t dcol, size_t len)
 	triples_Matrix *mat;
 	size_t i;
 
-	mat = bgv_alloc(len, sizeof *mat);
+	mat = tiimat3_util_alloc(len, sizeof *mat);
 	for (i = 0; i < len; ++i) {
 		mat[i].value = block_alloc(drow * dcol * TRIPLES_PACK);
 		mat[i].drow = drow;
@@ -1257,9 +1257,9 @@ triples_matrix_alloc_enc(size_t drow, size_t dcol, size_t len)
 	triples_MatrixEnc *mat;
 	size_t i;
 
-	mat = bgv_alloc(len, sizeof *mat);
+	mat = tiimat3_util_alloc(len, sizeof *mat);
 	for (i = 0; i < len; ++i) {
-		mat[i].value = bgv_alloc(drow * dcol, sizeof *mat[i].value);
+		mat[i].value = tiimat3_util_alloc(drow * dcol, sizeof *mat[i].value);
 		mat[i].drow = drow;
 		mat[i].dcol = dcol;
 	}
@@ -1294,7 +1294,7 @@ triples_matrix_dealloc(triples_Matrix *op, size_t len)
 
 	for (i = 0; i < len; ++i)
 		block_dealloc(op[i].value, op->drow * op->dcol * TRIPLES_PACK);
-	bgv_dealloc(op);
+	tiimat3_util_dealloc(op);
 }
 
 void
@@ -1303,8 +1303,8 @@ triples_matrix_dealloc_enc(triples_MatrixEnc *op, size_t len)
 	size_t i;
 
 	for (i = 0; i < len; ++i)
-		bgv_dealloc(op[i].value);
-	bgv_dealloc(op);
+		tiimat3_util_dealloc(op[i].value);
+	tiimat3_util_dealloc(op);
 }
 
 void
@@ -1445,7 +1445,7 @@ triples_matrix_mac(triples_MatrixEnc *rop, triples_MatrixEnc *op)
 					continue;
 
 				idx = row * rop->dcol + col;
-				bgv_mul(i, &rop->value[idx].value[i], &op->value[idx].value[i], &ctMAC[0][i]);
+				tiimat3_bgv_mul(i, &rop->value[idx].value[i], &op->value[idx].value[i], &ctMAC[0][i]);
 			}
 		}
 	}
@@ -1601,7 +1601,7 @@ triples_matrix_mul_enc(triples_MatrixEnc *rop, triples_MatrixEnc *op1, triples_M
 	assert(rop->dcol == op2->dcol);
 	assert(op1->dcol == op2->drow);
 
-	tmp = bgv_alloc(1, sizeof *tmp);
+	tmp = tiimat3_util_alloc(1, sizeof *tmp);
 
 	#if TRIPLES_PREROT
 	rotA1 = matrix_alloc_encdim(op1->drow, op1->dcol, 1);
@@ -1674,7 +1674,7 @@ triples_matrix_mul_enc(triples_MatrixEnc *rop, triples_MatrixEnc *op1, triples_M
 	triples_matrix_dealloc_enc(rotA1, 1);
 	triples_matrix_dealloc_enc(rotA2, 1);
 	triples_matrix_dealloc_enc(rotB, 1);
-	bgv_dealloc(tmp);
+	tiimat3_util_dealloc(tmp);
 }
 
 void

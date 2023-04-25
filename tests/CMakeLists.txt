@@ -19,7 +19,6 @@ target_link_libraries(test_msg_mpz gmp)
 target_link_options(test_msg_mpz PRIVATE -fsanitize=address)
 
 add_executable(test_bgv bgv.c
-	${SRC}/bgv.h
 	${SRC}/util.h ${SRC}/util.c
 	${SRC}/random.h ${SRC}/random.c
 	${SRC}/msg_mpz.h ${SRC}/msg_mpz.c)
@@ -27,7 +26,7 @@ target_compile_options(test_bgv PRIVATE -fsanitize=address)
 target_link_libraries(test_bgv gmp)
 target_link_options(test_bgv PRIVATE -fsanitize=address)
 
-if(BGV_USE_HEXL)
+if(TIIMAT3_USE_HEXL)
 	target_sources(test_bgv PRIVATE ${SRC}/ring_hexl.h ${SRC}/ring_hexl.cpp)
 	target_link_libraries(test_bgv hexl)
 else()
@@ -45,6 +44,6 @@ foreach(HOIST IN ITEMS 0 1)
 		target_compile_options(test_triples_${HOIST}${PREROT} PRIVATE
 			-fopenmp -fsanitize=address -Wno-type-limits)
 		target_link_options(test_triples_${HOIST}${PREROT} PRIVATE -fopenmp -fsanitize=address)
-		target_link_libraries(test_triples_${HOIST}${PREROT} libbgv)
+		target_link_libraries(test_triples_${HOIST}${PREROT} bgv)
 	endforeach()
 endforeach()

@@ -1,5 +1,4 @@
-#define BGV_BGV_IMPL
-#include "bgv.h"
+#include "../src/bgv.c"
 
 #define LEN(a) (sizeof a / sizeof *a)
 
@@ -88,17 +87,17 @@ test_pack(void)
 
 	cmp = msg_alloc_rand();
 	m = tiimat3_alloc_msg(1);
-	p = bgv_alloc(TIIMAT3_QLEN, sizeof *p);
+	p = tiimat3_util_alloc(TIIMAT3_QLEN, sizeof *p);
 
 	tiimat3_msg_pack(m, cmp);
 	for (i = 0; i < TIIMAT3_QLEN; ++i)
-		bgv_encode(i, &p[i], m);
-	bgv_decode(m, p);
+		tiimat3_bgv_encode(i, &p[i], m);
+	tiimat3_bgv_decode(m, p);
 	tiimat3_msg_unpack(m, m);
 
 	assert(msg_equal(cmp, m));
 
-	bgv_dealloc(p);
+	tiimat3_util_dealloc(p);
 	tiimat3_dealloc_msg(cmp, 1);
 	tiimat3_dealloc_msg(m, 1);
 }
@@ -107,67 +106,67 @@ void
 test_encrypt(void)
 {
 	tiimat3_Seed seed[2];
-	bgv_KeySecret *sk;
-	bgv_KeyPublic *pk;
+	tiimat3_KeySecret *sk;
+	tiimat3_KeyPublic *pk;
 
 	tiimat3_Message *cmp, *m;
-	bgv_Ciphertext *ct;
+	tiimat3_Ciphertext *ct;
 	tiimat3_Poly *p;
 	size_t i;
 
-	sk = bgv_alloc(1, sizeof *sk);
-	pk = bgv_alloc(1, sizeof *pk);
+	sk = tiimat3_util_alloc(1, sizeof *sk);
+	pk = tiimat3_util_alloc(1, sizeof *pk);
 	cmp = msg_alloc_rand();
 	m = tiimat3_alloc_msg(1);
-	ct = bgv_alloc(1, sizeof *ct);
-	p = bgv_alloc(TIIMAT3_QLEN, sizeof *p);
+	ct = tiimat3_util_alloc(1, sizeof *ct);
+	p = tiimat3_util_alloc(TIIMAT3_QLEN, sizeof *p);
 
-	bgv_keygen_secret(sk);
+	tiimat3_bgv_keygen_secret(sk);
 	for (i = 0; i < LEN(seed); ++i)
 		tiimat3_random_seed(&seed[i]);
 
 	tiimat3_msg_pack(m, cmp);
 	for (i = 0; i < TIIMAT3_QLEN; ++i) {
-		bgv_encode(i, &p[i], m);
-		bgv_keygen_public(i, pk, sk, &seed[0]);
-		bgv_encrypt(i, ct, pk, &p[i], &seed[1]);
-		bgv_decrypt(i, &p[i], sk, ct);
+		tiimat3_bgv_encode(i, &p[i], m);
+		tiimat3_bgv_keygen_public(i, pk, sk, &seed[0]);
+		tiimat3_bgv_encrypt(i, ct, pk, &p[i], &seed[1]);
+		tiimat3_bgv_decrypt(i, &p[i], sk, ct);
 	}
-	bgv_decode(m, p);
+	tiimat3_bgv_decode(m, p);
 	tiimat3_msg_unpack(m, m);
 	assert(msg_equal(cmp, m));
 
-	bgv_dealloc(sk);
-	bgv_dealloc(pk);
+	tiimat3_util_dealloc(sk);
+	tiimat3_util_dealloc(pk);
 	tiimat3_dealloc_msg(cmp, 1);
 	tiimat3_dealloc_msg(m, 1);
-	bgv_dealloc(ct);
-	bgv_dealloc(p);
+	tiimat3_util_dealloc(ct);
+	tiimat3_util_dealloc(p);
 }
 
 void
 test_arithmetic(void)
 {
 	tiimat3_Seed seed[4];
-	bgv_KeySecret *sk;
-	bgv_KeyPublic *pk;
+	tiimat3_KeySecret *sk;
+	tiimat3_KeyPublic *pk;
 
 	tiimat3_Message *cmp, *m[4];
-	bgv_Ciphertext *ct;
+	tiimat3_Ciphertext *ct;
 	tiimat3_Poly *p;
 	size_t i;
 
-	sk = bgv_alloc(1, sizeof *sk);
-	pk = bgv_alloc(1, sizeof *pk);
+	sk = tiimat3_util_alloc(1, sizeof *sk);
+	pk = tiimat3_util_alloc(1, sizeof *pk);
 	cmp = tiimat3_alloc_msg(1);
 	m[0] = msg_alloc_rand();
 	m[1] = msg_alloc_rand();
 	m[2] = msg_alloc_rand();
 	m[3] = msg_alloc_rand();
-	ct = bgv_alloc(3, sizeof *ct);
-	p = bgv_alloc(TIIMAT3_QLEN, sizeof *p);
+	ct = tiimat3_util_alloc(3, sizeof *ct);
+	p = tiimat3_util_alloc(TIIMAT3_QLEN, sizeof *p);
 
-	bgv_keygen_secret(sk);
+	tiimat3_bgv_keygen_secret(sk);
 	for (i = 0; i < LEN(seed); ++i)
 		tiimat3_random_seed(&seed[i]);
 
@@ -181,214 +180,214 @@ test_arithmetic(void)
 	tiimat3_msg_pack(m[3], m[3]);
 
 	for (i = 0; i < TIIMAT3_QLEN; ++i) {
-		bgv_keygen_public(i, pk, sk, &seed[0]);
+		tiimat3_bgv_keygen_public(i, pk, sk, &seed[0]);
 
-		bgv_encode(i, &p[i], m[0]);
-		bgv_encrypt(i, &ct[0], pk, &p[i], &seed[1]);
-		bgv_encode(i, &p[i], m[1]);
-		bgv_encrypt(i, &ct[1], pk, &p[i], &seed[2]);
-		bgv_encode(i, &p[i], m[2]);
-		bgv_encrypt(i, &ct[2], pk, &p[i], &seed[3]);
-		bgv_encode(i, &p[i], m[3]);
+		tiimat3_bgv_encode(i, &p[i], m[0]);
+		tiimat3_bgv_encrypt(i, &ct[0], pk, &p[i], &seed[1]);
+		tiimat3_bgv_encode(i, &p[i], m[1]);
+		tiimat3_bgv_encrypt(i, &ct[1], pk, &p[i], &seed[2]);
+		tiimat3_bgv_encode(i, &p[i], m[2]);
+		tiimat3_bgv_encrypt(i, &ct[2], pk, &p[i], &seed[3]);
+		tiimat3_bgv_encode(i, &p[i], m[3]);
 
-		bgv_mulc(i, &ct[0], &ct[0], &p[i]);
-		bgv_add(i, &ct[0], &ct[0], &ct[1]);
-		bgv_mul(i, &ct[0], &ct[0], &ct[2]);
+		tiimat3_bgv_mulc(i, &ct[0], &ct[0], &p[i]);
+		tiimat3_bgv_add(i, &ct[0], &ct[0], &ct[1]);
+		tiimat3_bgv_mul(i, &ct[0], &ct[0], &ct[2]);
 
-		bgv_decrypt(i, &p[i], sk, &ct[0]);
+		tiimat3_bgv_decrypt(i, &p[i], sk, &ct[0]);
 	}
 
-	bgv_decode(m[0], p);
+	tiimat3_bgv_decode(m[0], p);
 	tiimat3_msg_unpack(m[0], m[0]);
 	assert(msg_equal(cmp, m[0]));
 
-	bgv_dealloc(sk);
-	bgv_dealloc(pk);
+	tiimat3_util_dealloc(sk);
+	tiimat3_util_dealloc(pk);
 	tiimat3_dealloc_msg(cmp, 1);
-	for (i = 0; i < LEN(m); ++i)
+	for (i = 0; i < 4; ++i)
 		tiimat3_dealloc_msg(m[i], 1);
-	bgv_dealloc(ct);
-	bgv_dealloc(p);
+	tiimat3_util_dealloc(ct);
+	tiimat3_util_dealloc(p);
 }
 
 void
 test_modswitch(void)
 {
 	tiimat3_Seed seed[2];
-	bgv_KeySecret *sk;
-	bgv_KeyPublic *pk;
+	tiimat3_KeySecret *sk;
+	tiimat3_KeyPublic *pk;
 
 	tiimat3_Message *cmp, *m;
-	bgv_Ciphertext *ct;
-	bgv_Delta *delta;
+	tiimat3_Ciphertext *ct;
+	tiimat3_Delta *delta;
 	tiimat3_Poly *p;
 	size_t i;
 
-	sk = bgv_alloc(1, sizeof *sk);
-	pk = bgv_alloc(1, sizeof *pk);
+	sk = tiimat3_util_alloc(1, sizeof *sk);
+	pk = tiimat3_util_alloc(1, sizeof *pk);
 	cmp = msg_alloc_rand();
 	m = tiimat3_alloc_msg(1);
-	ct = bgv_alloc(TIIMAT3_QLEN, sizeof *ct);
-	delta = bgv_alloc(2, sizeof *delta);
-	p = bgv_alloc(TIIMAT3_QLEN, sizeof *p);
+	ct = tiimat3_util_alloc(TIIMAT3_QLEN, sizeof *ct);
+	delta = tiimat3_util_alloc(2, sizeof *delta);
+	p = tiimat3_util_alloc(TIIMAT3_QLEN, sizeof *p);
 
-	bgv_keygen_secret(sk);
+	tiimat3_bgv_keygen_secret(sk);
 	for (i = 0; i < LEN(seed); ++i)
 		tiimat3_random_seed(&seed[i]);
 
 	tiimat3_msg_pack(m, cmp);
 	for (i = 0; i < TIIMAT3_QLEN; ++i) {
-		bgv_keygen_public(i, pk, sk, &seed[0]);
+		tiimat3_bgv_keygen_public(i, pk, sk, &seed[0]);
 
-		bgv_encode(i, &p[i], m);
-		bgv_encrypt(i, &ct[i], pk, &p[i], &seed[1]);
+		tiimat3_bgv_encode(i, &p[i], m);
+		tiimat3_bgv_encrypt(i, &ct[i], pk, &p[i], &seed[1]);
 
 		if (i == 0) {
-			bgv_modswitch_delta(0, &delta[0], &ct[0]);
+			tiimat3_bgv_modswitch_delta(0, &delta[0], &ct[0]);
 			continue;
 		} else
-			bgv_modswitch_ext(i, &ct[i], &delta[0]);
+			tiimat3_bgv_modswitch_ext(i, &ct[i], &delta[0]);
 
 		if (i == 1) {
-			bgv_modswitch_delta(1, &delta[1], &ct[1]);
+			tiimat3_bgv_modswitch_delta(1, &delta[1], &ct[1]);
 			continue;
 		} else
-			bgv_modswitch_ext(i, &ct[i], &delta[1]);
+			tiimat3_bgv_modswitch_ext(i, &ct[i], &delta[1]);
 
-		bgv_decrypt(i, &p[i], sk, &ct[i]);
+		tiimat3_bgv_decrypt(i, &p[i], sk, &ct[i]);
 	}
 
 	tiimat3_mod_drop(0, 1);
 	tiimat3_mod_drop(1, 1);
 
-	bgv_decode(m, p);
+	tiimat3_bgv_decode(m, p);
 	tiimat3_msg_unpack(m, m);
 	assert(msg_equal(cmp, m));
 
 	tiimat3_mod_drop(0, 0);
 	tiimat3_mod_drop(1, 0);
 
-	bgv_dealloc(delta);
-	bgv_dealloc(ct);
-	bgv_dealloc(p);
+	tiimat3_util_dealloc(delta);
+	tiimat3_util_dealloc(ct);
+	tiimat3_util_dealloc(p);
 	tiimat3_dealloc_msg(cmp, 1);
 	tiimat3_dealloc_msg(m, 1);
-	bgv_dealloc(pk);
-	bgv_dealloc(sk);
+	tiimat3_util_dealloc(pk);
+	tiimat3_util_dealloc(sk);
 }
 
 void
 test_keyswitch(void)
 {
-	tiimat3_Seed seed[BGV_OMEGA + 3];
-	bgv_KeySecret *sk;
-	bgv_KeyPublic *pk;
-	bgv_KeySwitch *ksw, *ksw2, *kswr;
+	tiimat3_Seed seed[TIIMAT3_OMEGA + 3];
+	tiimat3_KeySecret *sk;
+	tiimat3_KeyPublic *pk;
+	tiimat3_KeySwitch *ksw, *ksw2, *kswr;
 
 	tiimat3_Message *cmp, *m;
-	bgv_Ciphertext *ct;
-	bgv_CiphertextSwitch *csw, *cswr;
-	bgv_Delta *delta;
+	tiimat3_Ciphertext *ct;
+	tiimat3_CiphertextSwitch *csw, *cswr;
+	tiimat3_Delta *delta;
 	tiimat3_Poly *p;
 	size_t i;
 
-	sk = bgv_alloc(1, sizeof *sk);
-	pk = bgv_alloc(1, sizeof *pk);
-	ksw = bgv_alloc(TIIMAT3_QPLEN, sizeof *ksw);
-	ksw2 = bgv_alloc(TIIMAT3_QPLEN, sizeof *ksw2);
-	kswr = bgv_alloc(TIIMAT3_QPLEN, sizeof *kswr);
+	sk = tiimat3_util_alloc(1, sizeof *sk);
+	pk = tiimat3_util_alloc(1, sizeof *pk);
+	ksw = tiimat3_util_alloc(TIIMAT3_QPLEN, sizeof *ksw);
+	ksw2 = tiimat3_util_alloc(TIIMAT3_QPLEN, sizeof *ksw2);
+	kswr = tiimat3_util_alloc(TIIMAT3_QPLEN, sizeof *kswr);
 	cmp = msg_alloc_rand();
 	m = tiimat3_alloc_msg(1);
-	ct = bgv_alloc(TIIMAT3_QPLEN, sizeof *ct);
-	csw = bgv_alloc(TIIMAT3_QPLEN, sizeof *csw);
-	cswr = bgv_alloc(1, sizeof *cswr);
-	delta = bgv_alloc(TIIMAT3_PLEN, sizeof *delta);
-	p = bgv_alloc(TIIMAT3_QLEN, sizeof *p);
+	ct = tiimat3_util_alloc(TIIMAT3_QPLEN, sizeof *ct);
+	csw = tiimat3_util_alloc(TIIMAT3_QPLEN, sizeof *csw);
+	cswr = tiimat3_util_alloc(1, sizeof *cswr);
+	delta = tiimat3_util_alloc(TIIMAT3_PLEN, sizeof *delta);
+	p = tiimat3_util_alloc(TIIMAT3_QLEN, sizeof *p);
 
-	bgv_keygen_secret(sk);
+	tiimat3_bgv_keygen_secret(sk);
 
 	for (i = 0; i < LEN(seed); ++i)
 		tiimat3_random_seed(&seed[i]);
 	for (i = 0; i < TIIMAT3_QPLEN; ++i)
-		bgv_keygen_switch(i, &ksw[i], sk, sk, &seed[3]);
+		tiimat3_bgv_keygen_switch(i, &ksw[i], sk, sk, &seed[3]);
 
 	for (i = 3; i < LEN(seed); ++i)
 		tiimat3_random_seed(&seed[i]);
 	for (i = 0; i < TIIMAT3_QPLEN; ++i)
-		bgv_keygen_switchr(i, &kswr[i], sk, 1, &seed[3]);
+		tiimat3_bgv_keygen_switchr(i, &kswr[i], sk, 1, &seed[3]);
 
 	for (i = 3; i < LEN(seed); ++i)
 		tiimat3_random_seed(&seed[i]);
 	for (i = 0; i < TIIMAT3_QPLEN; ++i)
-		bgv_keygen_switch2(i, &ksw2[i], sk, &seed[3]);
+		tiimat3_bgv_keygen_switch2(i, &ksw2[i], sk, &seed[3]);
 
 	tiimat3_msg_pack(m, cmp);
 	for (i = 0; i < TIIMAT3_QLEN; ++i) {
-		bgv_keygen_public(i, pk, sk, &seed[0]);
-		bgv_encode(i, &p[i], m);
-		bgv_encrypt(i, &ct[i], pk, &p[i], &seed[1]);
+		tiimat3_bgv_keygen_public(i, pk, sk, &seed[0]);
+		tiimat3_bgv_encode(i, &p[i], m);
+		tiimat3_bgv_encrypt(i, &ct[i], pk, &p[i], &seed[1]);
 	}
-	bgv_keyswitch(ct, ksw, 1);
+	tiimat3_bgv_keyswitch(ct, ksw, 1);
 	for (i = 0; i < TIIMAT3_QLEN; ++i)
-		bgv_decrypt(i, &p[i], sk, &ct[i]);
-	bgv_decode(m, p);
+		tiimat3_bgv_decrypt(i, &p[i], sk, &ct[i]);
+	tiimat3_bgv_decode(m, p);
 	tiimat3_msg_unpack(m, m);
 	assert(msg_equal(cmp, m));
 
 	tiimat3_msg_pack(m, cmp);
 	for (i = 0; i < TIIMAT3_QLEN; ++i) {
-		bgv_keygen_public(i, pk, sk, &seed[0]);
-		bgv_encode(i, &p[i], m);
-		bgv_encrypt(i, &ct[i], pk, &p[i], &seed[1]);
-		bgv_rot_inplace(i, &ct[i], 1);
+		tiimat3_bgv_keygen_public(i, pk, sk, &seed[0]);
+		tiimat3_bgv_encode(i, &p[i], m);
+		tiimat3_bgv_encrypt(i, &ct[i], pk, &p[i], &seed[1]);
+		tiimat3_bgv_rot_inplace(i, &ct[i], 1);
 	}
-	bgv_keyswitch(ct, kswr, 1);
+	tiimat3_bgv_keyswitch(ct, kswr, 1);
 	for (i = 0; i < TIIMAT3_QLEN; ++i)
-		bgv_decrypt(i, &p[i], sk, &ct[i]);
-	bgv_decode(m, p);
+		tiimat3_bgv_decrypt(i, &p[i], sk, &ct[i]);
+	tiimat3_bgv_decode(m, p);
 	tiimat3_msg_unpack(m, m);
 	msg_rot(cmp, cmp, 1);
 	assert(msg_equal(cmp, m));
 
 	tiimat3_msg_pack(m, cmp);
 	for (i = 0; i < TIIMAT3_QLEN; ++i) {
-		bgv_keygen_public(i, pk, sk, &seed[0]);
-		bgv_encode(i, &p[i], m);
-		bgv_encrypt(i, &ct[i], pk, &p[i], &seed[1]);
-		bgv_mul(i, &ct[i], &ct[i], &ct[i]);
+		tiimat3_bgv_keygen_public(i, pk, sk, &seed[0]);
+		tiimat3_bgv_encode(i, &p[i], m);
+		tiimat3_bgv_encrypt(i, &ct[i], pk, &p[i], &seed[1]);
+		tiimat3_bgv_mul(i, &ct[i], &ct[i], &ct[i]);
 	}
-	bgv_keyswitch(ct, ksw2, 2);
+	tiimat3_bgv_keyswitch(ct, ksw2, 2);
 	for (i = 0; i < TIIMAT3_QLEN; ++i)
-		bgv_decrypt(i, &p[i], sk, &ct[i]);
-	bgv_decode(m, p);
+		tiimat3_bgv_decrypt(i, &p[i], sk, &ct[i]);
+	tiimat3_bgv_decode(m, p);
 	tiimat3_msg_unpack(m, m);
 	msg_mul(cmp, cmp, cmp);
 	assert(msg_equal(cmp, m));
 
 	tiimat3_msg_pack(m, cmp);
 	for (i = 0; i < TIIMAT3_QLEN; ++i) {
-		bgv_keygen_public(i, pk, sk, &seed[0]);
-		bgv_encode(i, &p[i], m);
-		bgv_encrypt(i, &ct[i], pk, &p[i], &seed[1]);
+		tiimat3_bgv_keygen_public(i, pk, sk, &seed[0]);
+		tiimat3_bgv_encode(i, &p[i], m);
+		tiimat3_bgv_encrypt(i, &ct[i], pk, &p[i], &seed[1]);
 
 		if (i == 0) {
-			bgv_modswitch_delta(0, &delta[0], &ct[0]);
+			tiimat3_bgv_modswitch_delta(0, &delta[0], &ct[0]);
 			continue;
 		} else
-			bgv_modswitch_ext(i, &ct[i], &delta[0]);
+			tiimat3_bgv_modswitch_ext(i, &ct[i], &delta[0]);
 
 		if (i == 1) {
-			bgv_modswitch_delta(1, &delta[1], &ct[1]);
+			tiimat3_bgv_modswitch_delta(1, &delta[1], &ct[1]);
 			continue;
 		} else
-			bgv_modswitch_ext(i, &ct[i], &delta[1]);
+			tiimat3_bgv_modswitch_ext(i, &ct[i], &delta[1]);
 	}
 	tiimat3_mod_drop(0, 1);
 	tiimat3_mod_drop(1, 1);
-	bgv_keyswitch(ct, ksw, 1);
+	tiimat3_bgv_keyswitch(ct, ksw, 1);
 	for (i = 2; i < TIIMAT3_QLEN; ++i)
-		bgv_decrypt(i, &p[i], sk, &ct[i]);
-	bgv_decode(m, p);
+		tiimat3_bgv_decrypt(i, &p[i], sk, &ct[i]);
+	tiimat3_bgv_decode(m, p);
 	tiimat3_msg_unpack(m, m);
 	assert(msg_equal(cmp, m));
 
@@ -397,46 +396,46 @@ test_keyswitch(void)
 
 	tiimat3_msg_pack(m, cmp);
 	for (i = 0; i < TIIMAT3_QLEN; ++i) {
-		bgv_keygen_public(i, pk, sk, &seed[0]);
-		bgv_encode(i, &p[i], m);
-		bgv_encrypt(i, &ct[i], pk, &p[i], &seed[1]);
+		tiimat3_bgv_keygen_public(i, pk, sk, &seed[0]);
+		tiimat3_bgv_encode(i, &p[i], m);
+		tiimat3_bgv_encrypt(i, &ct[i], pk, &p[i], &seed[1]);
 	}
-	bgv_keyswitch_ext(csw, ct, 1);
+	tiimat3_bgv_keyswitch_ext(csw, ct, 1);
 	for (i = 0; i < TIIMAT3_QPLEN; ++i) {
-		bgv_rot_csw(i, cswr, &csw[i], 1);
-		bgv_keyswitch_dot(i, &ct[i], cswr, &kswr[i]);
+		tiimat3_bgv_rot_csw(i, cswr, &csw[i], 1);
+		tiimat3_bgv_keyswitch_dot(i, &ct[i], cswr, &kswr[i]);
 	}
 	for (i = TIIMAT3_QLEN; i < TIIMAT3_QPLEN; ++i)
-		bgv_keyswitch_delta(i, &delta[i - TIIMAT3_QLEN], &ct[i]);
+		tiimat3_bgv_keyswitch_delta(i, &delta[i - TIIMAT3_QLEN], &ct[i]);
 	for (i = 0; i < TIIMAT3_QLEN; ++i) {
-		bgv_keyswitch_switch(i, &ct[i], delta);
-		bgv_decrypt(i, &p[i], sk, &ct[i]);
+		tiimat3_bgv_keyswitch_switch(i, &ct[i], delta);
+		tiimat3_bgv_decrypt(i, &p[i], sk, &ct[i]);
 	}
-	bgv_decode(m, p);
+	tiimat3_bgv_decode(m, p);
 	tiimat3_msg_unpack(m, m);
 	msg_rot(cmp, cmp, 1);
 	assert(msg_equal(cmp, m));
 
-	bgv_dealloc(sk);
-	bgv_dealloc(pk);
-	bgv_dealloc(ksw);
-	bgv_dealloc(ksw2);
-	bgv_dealloc(kswr);
+	tiimat3_util_dealloc(sk);
+	tiimat3_util_dealloc(pk);
+	tiimat3_util_dealloc(ksw);
+	tiimat3_util_dealloc(ksw2);
+	tiimat3_util_dealloc(kswr);
 
 	tiimat3_dealloc_msg(cmp, 1);
 	tiimat3_dealloc_msg(m, 1);
-	bgv_dealloc(ct);
-	bgv_dealloc(csw);
-	bgv_dealloc(cswr);
-	bgv_dealloc(delta);
-	bgv_dealloc(p);
+	tiimat3_util_dealloc(ct);
+	tiimat3_util_dealloc(csw);
+	tiimat3_util_dealloc(cswr);
+	tiimat3_util_dealloc(delta);
+	tiimat3_util_dealloc(p);
 }
 
 int
 main(void)
 {
 
-	bgv_init();
+	tiimat3_bgv_init();
 
 	fputs("[+] Testing BGV packing:    ", stderr);
 	test_pack(), fputs("1/1.\n", stderr);
@@ -453,7 +452,7 @@ main(void)
 	fputs("[+] Testing BGV keyswitch:  ", stderr);
 	test_keyswitch(), fputs("5/5.\n", stderr);
 
-	bgv_deinit();
+	tiimat3_bgv_deinit();
 
 	return 0;
 }

@@ -1,9 +1,5 @@
 #include "msg_mpz.h"
 
-#ifndef TIIMAT3_ERROR_CSV
-#define TIIMAT3_ERROR_CSV 0
-#endif
-
 tiimat3_MessageMod tiimat3_t;
 
 #define BSR64(x) __bsrq(x)
