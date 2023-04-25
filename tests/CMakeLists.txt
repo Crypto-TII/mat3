@@ -6,9 +6,8 @@ target_compile_options(test_random PRIVATE -fsanitize=address)
 target_link_options(test_random PRIVATE -fsanitize=address)
 
 add_executable(test_ring_i64 ring_i64.c
-	${SRC}/ring_i64.h
-	${SRC}/random.h ${SRC}/random.c
-	${SRC}/util.h ${SRC}/util.c)
+	${SRC}/util.h ${SRC}/util.c
+	${SRC}/random.h ${SRC}/random.c)
 target_compile_options(test_ring_i64 PRIVATE -fsanitize=address)
 target_link_libraries(test_ring_i64 gmp)
 target_link_options(test_ring_i64 PRIVATE -fsanitize=address)
@@ -33,7 +32,7 @@ if(BGV_USE_HEXL)
 	target_sources(test_bgv PRIVATE ${SRC}/ring_hexl.h ${SRC}/ring_hexl.cpp)
 	target_link_libraries(test_bgv hexl)
 else()
-	target_sources(test_bgv PRIVATE ${SRC}/ring_i64.h)
+	target_sources(test_bgv PRIVATE ${SRC}/ring_i64.h ${SRC}/ring_i64.c)
 endif()
 
 foreach(HOIST IN ITEMS 0 1)

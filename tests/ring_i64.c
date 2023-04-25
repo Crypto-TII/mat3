@@ -1,7 +1,4 @@
-#define BGV_RANDOM_IMPL
-#define BGV_RING_IMPL
-#define BGV_UTIL_IMPL
-#include "ring_i64.h"
+#include "../src/ring_i64.c"
 
 void
 test_barrett(void)
