@@ -187,7 +187,7 @@ digit_inv(size_t idx, bgv_Digit a)
 {
 	int64_t inv;
 
-	inv = bgv_util_invmod(digit_deinit(idx, a), bgv_q[idx].value);
+	inv = tiimat3_util_invmod(digit_deinit(idx, a), bgv_q[idx].value);
 	return digit_init(idx, inv);
 }
 
@@ -305,7 +305,7 @@ seiler_intt(int64_t *poly, size_t degree, int64_t mod, int64_t root, int64_t bar
 	size_t dlog, dinv, j, k, l, s;
 
 	dlog = BSR64(degree);
-	dinv = montgomery_init(bgv_util_invmod(degree, mod), mod, inv, pow);
+	dinv = montgomery_init(tiimat3_util_invmod(degree, mod), mod, inv, pow);
 
 	k = 0;
 	for (l = 1; l < degree; l <<= 1) {
@@ -313,10 +313,10 @@ seiler_intt(int64_t *poly, size_t degree, int64_t mod, int64_t root, int64_t bar
 			int64_t r;
 			size_t exp;
 
-			exp = 1 + bgv_util_bitrev(k++, dlog);
+			exp = 1 + tiimat3_util_bitrev(k++, dlog);
 			r = montgomery_powred(root, exp, mod, inv, pow);
 			r = montgomery_deinit(r, mod, inv);
-			r = montgomery_init(bgv_util_invmod(r, mod), mod, inv, pow);
+			r = montgomery_init(tiimat3_util_invmod(r, mod), mod, inv, pow);
 
 			for (j = s; j < s + l; ++j) {
 				int64_t tmp;
@@ -346,7 +346,7 @@ seiler_ntt(int64_t *poly, size_t degree, int64_t mod, int64_t root, int64_t barr
 			int64_t r;
 			size_t exp;
 
-			exp = bgv_util_bitrev(k++, dlog);
+			exp = tiimat3_util_bitrev(k++, dlog);
 			r = montgomery_powred(root, exp, mod, inv, pow);
 
 			for (j = s; j < s + l; ++j) {

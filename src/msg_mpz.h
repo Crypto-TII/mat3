@@ -139,7 +139,7 @@ mpz_ntt(mpz_t *poly, size_t degree, const mpz_t mod, const mpz_t root)
 	k = 1;
 	for (l = degree >> 1; l > 0; l >>= 1) {
 		for (s = 0; s < degree; s = j + l) {
-			exp = bgv_util_bitrev(k++, dlog);
+			exp = tiimat3_util_bitrev(k++, dlog);
 			mpz_powm_ui(r, root, exp, mod);
 
 			for (j = s; j < s + l; ++j) {
@@ -172,7 +172,7 @@ mpz_intt(mpz_t *poly, size_t degree, const mpz_t mod, const mpz_t root)
 	k = 0;
 	for (l = 1; l < degree; l <<= 1) {
 		for (s = 0; s < degree; s = j + l) {
-			exp = 1 + bgv_util_bitrev(k++, dlog);
+			exp = 1 + tiimat3_util_bitrev(k++, dlog);
 			mpz_powm_ui(r, root, exp, mod);
 			mpz_invert(r, r, mod);
 
@@ -206,7 +206,7 @@ bgv_alloc_msg(size_t len)
 	bgv_Message *m;
 	size_t i, j;
 
-	m = bgv_util_alloc(len, sizeof *m);
+	m = tiimat3_util_alloc(len, sizeof *m);
 	for (i = 0; i < len; ++i)
 		for (j = 0; j < BGV_D; ++j)
 			mpz_init(m[i].value[j]);
@@ -241,8 +241,8 @@ bgv_msg_crt_i64(bgv_Message *m, const int64_t **rns, const int64_t *mods, size_t
 	uint64_t *mods2;
 	size_t i;
 
-	mods2 = bgv_util_alloc(len, sizeof *mods2);
-	rns2 = bgv_util_alloc(len, sizeof *rns2);
+	mods2 = tiimat3_util_alloc(len, sizeof *mods2);
+	rns2 = tiimat3_util_alloc(len, sizeof *rns2);
 
 	for (i = 0; i < len; ++i) {
 		mods2[i] = mods[i];
@@ -250,8 +250,8 @@ bgv_msg_crt_i64(bgv_Message *m, const int64_t **rns, const int64_t *mods, size_t
 	}
 	bgv_msg_crt_u64(m, rns2, mods2, len);
 
-	bgv_util_dealloc(mods2);
-	bgv_util_dealloc(rns2);
+	tiimat3_util_dealloc(mods2);
+	tiimat3_util_dealloc(rns2);
 }
 
 void
@@ -302,8 +302,8 @@ bgv_pack(bgv_Message *rop, const bgv_Message *m)
 	for (j = 0; j < BGV_D / 2; ++j) {
 		size_t idx1, idx2;
 
-		idx1 = bgv_util_bitrev((idx - 1) / 2, dlog);
-		idx2 = bgv_util_bitrev((2 * BGV_D - idx - 1) / 2, dlog);
+		idx1 = tiimat3_util_bitrev((idx - 1) / 2, dlog);
+		idx2 = tiimat3_util_bitrev((2 * BGV_D - idx - 1) / 2, dlog);
 
 		mpz_set(cpy->value[idx1], m->value[j]);
 		mpz_set(cpy->value[idx2], m->value[j | BGV_D / 2]);
@@ -360,8 +360,8 @@ bgv_unpack(bgv_Message *rop, const bgv_Message *m)
 	for (j = 0; j < BGV_D / 2; ++j) {
 		size_t idx1, idx2;
 
-		idx1 = bgv_util_bitrev((idx - 1) / 2, dlog);
-		idx2 = bgv_util_bitrev((2 * BGV_D - idx - 1) / 2, dlog);
+		idx1 = tiimat3_util_bitrev((idx - 1) / 2, dlog);
+		idx2 = tiimat3_util_bitrev((2 * BGV_D - idx - 1) / 2, dlog);
 
 		mpz_set(rop->value[j], cpy->value[idx1]);
 		mpz_set(rop->value[j | BGV_D / 2], cpy->value[idx2]);

@@ -2,7 +2,7 @@ add_library(libbgv STATIC libbgv.h libbgv.c
 	bgv.h
 	msg_mpz.h
 	random.h
-	util.h)
+	util.h util.c)
 target_link_libraries(libbgv gmp)
 
 if(BGV_USE_HEXL)

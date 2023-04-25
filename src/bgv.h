@@ -217,14 +217,14 @@ void *
 bgv_alloc(size_t len, size_t size)
 {
 
-	return bgv_util_alloc(len, size);
+	return tiimat3_util_alloc(len, size);
 }
 
 void
 bgv_dealloc(void *ptr)
 {
 
-	bgv_util_dealloc(ptr);
+	tiimat3_util_dealloc(ptr);
 }
 
 void
