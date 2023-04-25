@@ -27,23 +27,39 @@ target_link_libraries(test_bgv gmp)
 target_link_options(test_bgv PRIVATE -fsanitize=address)
 
 if(TIIMAT3_USE_HEXL)
-	target_sources(test_bgv PRIVATE ${SRC}/ring_hexl.h ${SRC}/ring_hexl.cpp)
+	target_sources(test_bgv PRIVATE
+		${SRC}/ring_hexl.h ${SRC}/ring_hexl.cpp)
 	target_link_libraries(test_bgv hexl)
 else()
-	target_sources(test_bgv PRIVATE ${SRC}/ring_i64.h ${SRC}/ring_i64.c)
+	target_sources(test_bgv PRIVATE
+		${SRC}/ring_i64.h ${SRC}/ring_i64.c)
 endif()
 
 foreach(HOIST IN ITEMS 0 1)
 	foreach(PREROT IN ITEMS 0 1)
 		add_executable(test_triples_${HOIST}${PREROT} triples.c
-			${SRC}/triples.h)
+			${SRC}/util.h ${SRC}/util.c
+			${SRC}/random.h ${SRC}/random.c
+			${SRC}/msg_mpz.h ${SRC}/msg_mpz.c
+			${SRC}/bgv.h ${SRC}/bgv.c)
+		if(TIIMAT3_USE_HEXL)
+			target_sources(test_triples_${HOIST}${PREROT} PRIVATE
+				${SRC}/ring_hexl.h ${SRC}/ring_hexl.cpp)
+			target_link_libraries(test_triples_${HOIST}${PREROT}
+				gmp hexl)
+		else()
+			target_sources(test_triples_${HOIST}${PREROT} PRIVATE
+				${SRC}/ring_i64.h ${SRC}/ring_i64.cpp)
+			target_link_libraries(test_triples_${HOIST}${PREROT}
+				gmp)
+		endif()
+
 		target_compile_definitions(test_triples_${HOIST}${PREROT} PRIVATE
-			-DTRIPLES_DIM=4
-			-DTRIPLES_HOIST=${HOIST}
-			-DTRIPLES_PREROT=${PREROT})
+			-DTIIMAT3_DIM=4
+			-DTIIMAT3_HOIST=${HOIST}
+			-DTIIMAT3_PREROT=${PREROT})
 		target_compile_options(test_triples_${HOIST}${PREROT} PRIVATE
 			-fopenmp -fsanitize=address -Wno-type-limits)
 		target_link_options(test_triples_${HOIST}${PREROT} PRIVATE -fopenmp -fsanitize=address)
-		target_link_libraries(test_triples_${HOIST}${PREROT} bgv)
 	endforeach()
 endforeach()

@@ -1,5 +1,5 @@
-#ifndef TIIMAT3_H
-#define TIIMAT3_H
+#ifndef TIIMAT3_BGV_H
+#define TIIMAT3_BGV_H
 
 #define TIIMAT3_OMEGA 3
 #define TIIMAT3_KMAX  4
@@ -88,4 +88,4 @@ void tiimat3_bgv_rot_csw(size_t idx, tiimat3_CiphertextSwitch *rop, tiimat3_Ciph
 void tiimat3_bgv_rot_csw_inplace(size_t idx, tiimat3_CiphertextSwitch *csw, size_t steps);
 void tiimat3_bgv_rot_inplace(size_t idx, tiimat3_Ciphertext *ct, size_t steps);
 
-#endif /* TIIMAT3_H */
+#endif /* TIIMAT3_BGV_H */

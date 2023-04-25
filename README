@@ -1,6 +1,6 @@
 # Matrix Triple Generation
 
-To build this code, please use the following commands:
+To build this code, use the following commands:
 ```
 cmake -S . -B build
 cmake --build build
@@ -12,7 +12,7 @@ tests/run.sh
 ```
 
 Finally, if you want to run benchmarks, please specify
-`-DTRIPLES_BUILD_BENCH=1` when running the first `cmake` command.
+`-DTIIMAT3_BUILD_BENCH=1` when running the first `cmake` command.
 
 
 ## Tests
