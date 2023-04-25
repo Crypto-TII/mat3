@@ -1,6 +1,4 @@
-#define BGV_UTIL_IMPL
-#define BGV_MSG_IMPL
-#include "msg_mpz.h"
+#include "../src/msg_mpz.c"
 
 void
 test_cmod(void)

@@ -1,6 +1,6 @@
 add_library(libbgv STATIC libbgv.h libbgv.c
 	bgv.h
-	msg_mpz.h
+	msg_mpz.h msg_mpz.c
 	random.h random.c
 	util.h util.c)
 target_link_libraries(libbgv gmp)

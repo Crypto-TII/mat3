@@ -7,12 +7,12 @@
 #if BGV_USE_HEXL
 	#include "ring_hexl.h"
 	#define tiimat3_mod_init tiimat3_mod_init_mpz
-	#define bgv_msg_crt  bgv_msg_crt_u64
+	#define tiimat3_msg_crt  tiimat3_msg_crt_u64
 	#define tiimat3_poly_mod tiimat3_poly_mod_mpz
 #else
 	#include "ring_i64.h"
 	#define tiimat3_mod_init tiimat3_mod_init_mpz
-	#define bgv_msg_crt  bgv_msg_crt_i64
+	#define tiimat3_msg_crt  tiimat3_msg_crt_i64
 	#define tiimat3_poly_mod tiimat3_poly_mod_mpz
 #endif /* BGV_USE_HEXL */
 
@@ -63,10 +63,10 @@ extern size_t bgv_chunk_len[BGV_OMEGA];
 void  bgv_add(size_t idx, bgv_Ciphertext *rop, bgv_Ciphertext *op1, bgv_Ciphertext *op2);
 void *bgv_alloc(size_t len, size_t size);
 void  bgv_dealloc(void *ptr);
-void  bgv_decode(bgv_Message *m, const tiimat3_Poly *p);
+void  bgv_decode(tiimat3_Message *m, const tiimat3_Poly *p);
 void  bgv_decrypt(size_t idx, tiimat3_Poly *p, const bgv_KeySecret *sk, bgv_Ciphertext *ct);
 void  bgv_deinit(void);
-void  bgv_encode(size_t idx, tiimat3_Poly *p, const bgv_Message *m);
+void  bgv_encode(size_t idx, tiimat3_Poly *p, const tiimat3_Message *m);
 void  bgv_encrypt(size_t idx, bgv_Ciphertext *ct, bgv_KeyPublic *pk, const tiimat3_Poly *p, tiimat3_Seed *seed);
 void  bgv_init(void);
 void  bgv_keygen_public(size_t idx, bgv_KeyPublic *pk, const bgv_KeySecret *sk, tiimat3_Seed *seed);
@@ -228,7 +228,7 @@ bgv_dealloc(void *ptr)
 }
 
 void
-bgv_decode(bgv_Message *m, const tiimat3_Poly *p)
+bgv_decode(tiimat3_Message *m, const tiimat3_Poly *p)
 {
 	tiimat3_Poly *cpy;
 	const tiimat3_Digit *rns[TIIMAT3_QLEN];
@@ -251,14 +251,14 @@ bgv_decode(bgv_Message *m, const tiimat3_Poly *p)
 	}
 
 	tiimat3_mod_digits(mods);
-	bgv_msg_crt(m, rns, mods, len);
+	tiimat3_msg_crt(m, rns, mods, len);
 
 	tiimat3_mod_mpz(mod);
-	bgv_msg_cmod(m, m, mod);
+	tiimat3_msg_cmod(m, m, mod);
 
 	for (i = 0; i < TIIMAT3_QLEN; ++i)
 		for (ii = 0; ii < tiimat3_q[i].drop; ++ii)
-			bgv_msg_mulc(m, m, tiimat3_q[i].value);
+			tiimat3_msg_mulc(m, m, tiimat3_q[i].value);
 
 	bgv_dealloc(cpy);
 	mpz_clear(mod);
@@ -290,13 +290,13 @@ bgv_deinit(void)
 {
 	size_t i;
 
-	bgv_msgmod_deinit();
+	tiimat3_msgmod_deinit();
 	for (i = 0; i < TIIMAT3_QPLEN; ++i)
 		tiimat3_mod_deinit(i);
 }
 
 void
-bgv_encode(size_t idx, tiimat3_Poly *p, const bgv_Message *m)
+bgv_encode(size_t idx, tiimat3_Poly *p, const tiimat3_Message *m)
 {
 	
 	tiimat3_poly_mod(idx, p, m->value);
@@ -343,10 +343,10 @@ bgv_init(void)
 
 	mpz_init(tmp);
 
-	bgv_msgmod_init();
+	tiimat3_msgmod_init();
 
 	for (i = 0; i < TIIMAT3_QPLEN; ++i)
-		tiimat3_mod_init(i, bgv_t.value);
+		tiimat3_mod_init(i, tiimat3_t.value);
 
 	/* initialize chunks */
 	div = TIIMAT3_QLEN / BGV_OMEGA;
