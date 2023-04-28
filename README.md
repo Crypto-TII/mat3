@@ -28,3 +28,10 @@ of hoisting and pre-rotation:
 - `test_triples_01`: no hoisting, pre-rotation
 - `test_triples_10`: hoisting, no pre-rotation
 - `test_triples_11`: hoisting, pre-rotation
+
+## Citations
+
+The accompanying paper is published at [AsiaCCS 2023] and available on [ePrint].
+
+[AsiaCCS 2023]: https://doi.org/10.1145/3579856.3590344
+[ePrint]: https://eprint.iacr.org/2023/593
