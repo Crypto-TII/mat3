@@ -25,7 +25,12 @@ const tiimat3_Digit tiimat3_rns[TIIMAT3_QPLEN] = {
 __extension__ typedef          __int128  int128_t;
 __extension__ typedef unsigned __int128 uint128_t;
 
-#define BSR64(x) __bsrq(x)
+#if defined(__x86_64__)
+	#include <x86intrin.h>
+	#define BSR64(x) __bsrq(x)
+#else
+	#define BSR64(x) tiimat3_util_msb64(x)
+#endif
 
 /* https://eprint.iacr.org/2018/039 */
 static int64_t barrett_precomp(int64_t mod);

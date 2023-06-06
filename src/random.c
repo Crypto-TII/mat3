@@ -7,10 +7,19 @@
 #define SHA3_384_RATE    104
 #define SHAKE128_RATE    168
 
-#define BSR64(x)    __bsrq(x)
-#define LEN(a)      (sizeof a / sizeof *a)
-#define POPCNT32(x) __popcntd(x)
-#define ROL64(x, r) __rolq(x, r)
+#define LEN(a) (sizeof a / sizeof *a)
+
+#if defined(__x86_64__)
+	#include <x86intrin.h>
+
+	#define BSR64(x)    __bsrq(x)
+	#define POPCNT32(x) __popcntd(x)
+	#define ROL64(x, r) __rolq(x, r)
+#else
+	#define BSR64(x)    tiimat3_util_msb64(x)
+	#define POPCNT32(x) tiimat3_util_popcount32(x)
+	#define ROL64(x, r) tiimat3_util_rol64(x, r)
+#endif
 
 #define sha3_384_absorb(s, in, len) keccak_absorb(s, in, len, 104, 0x06)
 #define sha3_384_squeeze(s, out)    keccak_squeeze(s, out, 104)
@@ -466,8 +475,8 @@ void
 tiimat3_random_seed(tiimat3_Seed *seed)
 {
 
-	if (getrandom(seed->value, KECCAK_SEED_LEN, 0) != KECCAK_SEED_LEN) {
-		perror("getrandom");
+	if (RAND_bytes(seed->value, KECCAK_SEED_LEN) != 1) {
+		perror("RAND_bytes");
 		exit(1);
 	}
 	seed->init = 1;

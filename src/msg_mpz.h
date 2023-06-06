@@ -4,7 +4,6 @@
 #include <assert.h>
 #include <gmp.h>
 #include <stdio.h>
-#include <x86intrin.h>
 
 #include "util.h"
 
@@ -25,11 +24,11 @@ struct tiimat3_message_mod {
 
 extern tiimat3_MessageMod tiimat3_t;
 
-tiimat3_Message *tiimat3_alloc_msg(size_t len);
-void tiimat3_dealloc_msg(tiimat3_Message *m, size_t len);
+tiimat3_Message *tiimat3_msg_alloc(size_t len);
 void tiimat3_msg_cmod(tiimat3_Message *rop, const tiimat3_Message *m, const mpz_t mod);
 void tiimat3_msg_crt_i64(tiimat3_Message *m, const int64_t **rns, const int64_t *mods, size_t len);
 void tiimat3_msg_crt_u64(tiimat3_Message *m, const uint64_t **rns, const uint64_t *mods, size_t len);
+void tiimat3_msg_dealloc(tiimat3_Message *m, size_t len);
 void tiimat3_msg_mulc(tiimat3_Message *rop, const tiimat3_Message *m, uint64_t c);
 void tiimat3_msg_pack(tiimat3_Message *rop, const tiimat3_Message *m);
 void tiimat3_msg_unpack(tiimat3_Message *rop, const tiimat3_Message *m);

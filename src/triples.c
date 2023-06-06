@@ -114,7 +114,7 @@ block_decrypt(tiimat3_Block *rop, tiimat3_BlockEnc *op)
 	tiimat3_Poly *p;
 	size_t i;
 
-	m = tiimat3_alloc_msg(1);
+	m = tiimat3_msg_alloc(1);
 	p = tiimat3_util_alloc(TIIMAT3_QLEN, sizeof *p);
 	tiimat3_random_seed(&seed);
 
@@ -129,7 +129,7 @@ block_decrypt(tiimat3_Block *rop, tiimat3_BlockEnc *op)
 	tiimat3_bgv_decode(m, p);
 	block_unpack(rop, m);
 
-	tiimat3_dealloc_msg(m, 1);
+	tiimat3_msg_dealloc(m, 1);
 	tiimat3_util_dealloc(p);
 }
 
@@ -141,7 +141,7 @@ block_encrypt(tiimat3_BlockEnc *rop, const tiimat3_Block *blocks, size_t rot, vo
 	tiimat3_Poly *p;
 	size_t i;
 
-	m = tiimat3_alloc_msg(1);
+	m = tiimat3_msg_alloc(1);
 	p = tiimat3_util_alloc(1, sizeof *p);
 	tiimat3_random_seed(&seed);
 
@@ -151,7 +151,7 @@ block_encrypt(tiimat3_BlockEnc *rop, const tiimat3_Block *blocks, size_t rot, vo
 		tiimat3_bgv_encrypt(i, &rop->value[i], &pk[i], p, &seed);
 	}
 
-	tiimat3_dealloc_msg(m, 1);
+	tiimat3_msg_dealloc(m, 1);
 	tiimat3_util_dealloc(p);
 }
 
@@ -290,7 +290,7 @@ block_unpack(tiimat3_Block *vec, const tiimat3_Message *m)
 	tiimat3_Message *cpy;
 	size_t i, row, col;
 
-	cpy = tiimat3_alloc_msg(1);
+	cpy = tiimat3_msg_alloc(1);
 	tiimat3_msg_unpack(cpy, m);
 
 	for (i = 0; i < TIIMAT3_PACK / 2; ++i) {
@@ -311,7 +311,7 @@ block_unpack(tiimat3_Block *vec, const tiimat3_Message *m)
 		}
 	}
 
-	tiimat3_dealloc_msg(cpy, 1);
+	tiimat3_msg_dealloc(cpy, 1);
 }
 
 static void
@@ -443,7 +443,7 @@ msg_rot(tiimat3_Message *rop, const tiimat3_Message *m, size_t steps)
 	tiimat3_Message *cpy;
 	size_t j;
 
-	cpy = tiimat3_alloc_msg(1);
+	cpy = tiimat3_msg_alloc(1);
 	msg_cpy(cpy, m);
 
 	for (j = 0; j < TIIMAT3_D / 2; ++j) {
@@ -455,7 +455,7 @@ msg_rot(tiimat3_Message *rop, const tiimat3_Message *m, size_t steps)
 		mpz_set(rop->value[j], cpy->value[idx]);
 	}
 
-	tiimat3_dealloc_msg(cpy, 1);
+	tiimat3_msg_dealloc(cpy, 1);
 }
 
 static void
@@ -995,7 +995,7 @@ tiimat3_init(void)
 		tiimat3_bgv_keygen_switch2(i, &ksw2[i], &sk, seed);
 
 	/* MAC key */
-	m = tiimat3_alloc_msg(1);
+	m = tiimat3_msg_alloc(1);
 	mpz_set_ui(MAC[0], 0);
 	memset(ctMAC[0], 0, sizeof ctMAC[0]);
 	for (i = 1; i <= TIIMAT3_SHARES; ++i) {
@@ -1013,7 +1013,7 @@ tiimat3_init(void)
 			tiimat3_bgv_add(j, &ctMAC[0][j], &ctMAC[0][j], &ctMAC[i][j]);
 		}
 	}
-	tiimat3_dealloc_msg(m, 1);
+	tiimat3_msg_dealloc(m, 1);
 
 	/* Uphi */
 	for (k = 1; k < TIIMAT3_DIM; ++k) {
@@ -1397,7 +1397,7 @@ tiimat3_matrix_mac_verifyA(const tiimat3_Matrix *mac, const tiimat3_Matrix *op)
 	tiimat3_mod_drop(0, 0);
 	tiimat3_mod_drop(1, 0);
 
-	m = tiimat3_alloc_msg(1);
+	m = tiimat3_msg_alloc(1);
 	tmp = block_alloc(TIIMAT3_PACK);
 	cmp = 0;
 
@@ -1419,7 +1419,7 @@ tiimat3_matrix_mac_verifyA(const tiimat3_Matrix *mac, const tiimat3_Matrix *op)
 		}
 	}
 
-	tiimat3_dealloc_msg(m, 1);
+	tiimat3_msg_dealloc(m, 1);
 	block_dealloc(tmp, TIIMAT3_PACK);
 
 	return cmp;
@@ -1439,7 +1439,7 @@ tiimat3_matrix_mac_verifyB(const tiimat3_Matrix *mac, const tiimat3_Matrix *op)
 	tiimat3_mod_drop(0, 0);
 	tiimat3_mod_drop(1, 0);
 
-	m = tiimat3_alloc_msg(1);
+	m = tiimat3_msg_alloc(1);
 	tmp = block_alloc(TIIMAT3_PACK);
 	cmp = 0;
 
@@ -1455,7 +1455,7 @@ tiimat3_matrix_mac_verifyB(const tiimat3_Matrix *mac, const tiimat3_Matrix *op)
 		}
 	}
 
-	tiimat3_dealloc_msg(m, 1);
+	tiimat3_msg_dealloc(m, 1);
 	block_dealloc(tmp, TIIMAT3_PACK);
 
 	return cmp;

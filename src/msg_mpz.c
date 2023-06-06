@@ -2,7 +2,12 @@
 
 tiimat3_MessageMod tiimat3_t;
 
-#define BSR64(x) __bsrq(x)
+#if defined(__x86_64__)
+	#include <x86intrin.h>
+	#define BSR64(x) __bsrq(x)
+#else
+	#define BSR64(x) tiimat3_util_msb64(x)
+#endif
 
 /* https://en.wikipedia.org/wiki/Chinese_remainder_theorem */
 static void mpz_cmod(mpz_t rop, const mpz_t op, const mpz_t mod);
@@ -161,7 +166,7 @@ mpz_intt(mpz_t *poly, size_t degree, const mpz_t mod, const mpz_t root)
 
 
 tiimat3_Message *
-tiimat3_alloc_msg(size_t len)
+tiimat3_msg_alloc(size_t len)
 {
 	tiimat3_Message *m;
 	size_t i, j;
@@ -175,7 +180,7 @@ tiimat3_alloc_msg(size_t len)
 }
 
 void
-tiimat3_dealloc_msg(tiimat3_Message *m, size_t len)
+tiimat3_msg_dealloc(tiimat3_Message *m, size_t len)
 {
 	size_t i, j;
 
@@ -238,7 +243,7 @@ tiimat3_msg_pack(tiimat3_Message *rop, const tiimat3_Message *m)
 	tiimat3_Message *cpy;
 	size_t dlog, idx, j;
 
-	cpy = tiimat3_alloc_msg(1);
+	cpy = tiimat3_msg_alloc(1);
 
 	/* reorder slots */
 	idx = 1;
@@ -261,7 +266,7 @@ tiimat3_msg_pack(tiimat3_Message *rop, const tiimat3_Message *m)
 	for (j = 0; j < TIIMAT3_D; ++j)
 		mpz_set(rop->value[j], cpy->value[j]);
 
-	tiimat3_dealloc_msg(cpy, 1);
+	tiimat3_msg_dealloc(cpy, 1);
 }
 
 void
@@ -270,7 +275,7 @@ tiimat3_msg_unpack(tiimat3_Message *rop, const tiimat3_Message *m)
 	tiimat3_Message *cpy;
 	size_t dlog, idx, j;
 
-	cpy = tiimat3_alloc_msg(1);
+	cpy = tiimat3_msg_alloc(1);
 
 	#if TIIMAT3_ERROR_CSV
 	do {
@@ -314,7 +319,7 @@ tiimat3_msg_unpack(tiimat3_Message *rop, const tiimat3_Message *m)
 		idx %= 2 * TIIMAT3_D;
 	}
 
-	tiimat3_dealloc_msg(cpy, 1);
+	tiimat3_msg_dealloc(cpy, 1);
 }
 
 void

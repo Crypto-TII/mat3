@@ -1,13 +1,14 @@
 #ifndef TIIMAT3_RANDOM_H
 #define TIIMAT3_RANDOM_H
 
-#include <sys/random.h>
+#include <openssl/rand.h>
 #include <assert.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <x86intrin.h>
+
+#include "util.h"
 
 typedef struct tiimat3_seed tiimat3_Seed;
 struct tiimat3_seed {

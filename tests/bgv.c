@@ -22,7 +22,7 @@ msg_alloc_rand(void)
 
 	gmp_randinit_default(state);
 
-	m = tiimat3_alloc_msg(1);
+	m = tiimat3_msg_alloc(1);
 	for (j = 0; j < TIIMAT3_D; ++j)
 		mpz_urandomm(m->value[j], state, tiimat3_t.value);
 
@@ -86,7 +86,7 @@ test_pack(void)
 	size_t i;
 
 	cmp = msg_alloc_rand();
-	m = tiimat3_alloc_msg(1);
+	m = tiimat3_msg_alloc(1);
 	p = tiimat3_util_alloc(TIIMAT3_QLEN, sizeof *p);
 
 	tiimat3_msg_pack(m, cmp);
@@ -98,8 +98,8 @@ test_pack(void)
 	assert(msg_equal(cmp, m));
 
 	tiimat3_util_dealloc(p);
-	tiimat3_dealloc_msg(cmp, 1);
-	tiimat3_dealloc_msg(m, 1);
+	tiimat3_msg_dealloc(cmp, 1);
+	tiimat3_msg_dealloc(m, 1);
 }
 
 void
@@ -117,7 +117,7 @@ test_encrypt(void)
 	sk = tiimat3_util_alloc(1, sizeof *sk);
 	pk = tiimat3_util_alloc(1, sizeof *pk);
 	cmp = msg_alloc_rand();
-	m = tiimat3_alloc_msg(1);
+	m = tiimat3_msg_alloc(1);
 	ct = tiimat3_util_alloc(1, sizeof *ct);
 	p = tiimat3_util_alloc(TIIMAT3_QLEN, sizeof *p);
 
@@ -138,8 +138,8 @@ test_encrypt(void)
 
 	tiimat3_util_dealloc(sk);
 	tiimat3_util_dealloc(pk);
-	tiimat3_dealloc_msg(cmp, 1);
-	tiimat3_dealloc_msg(m, 1);
+	tiimat3_msg_dealloc(cmp, 1);
+	tiimat3_msg_dealloc(m, 1);
 	tiimat3_util_dealloc(ct);
 	tiimat3_util_dealloc(p);
 }
@@ -158,7 +158,7 @@ test_arithmetic(void)
 
 	sk = tiimat3_util_alloc(1, sizeof *sk);
 	pk = tiimat3_util_alloc(1, sizeof *pk);
-	cmp = tiimat3_alloc_msg(1);
+	cmp = tiimat3_msg_alloc(1);
 	m[0] = msg_alloc_rand();
 	m[1] = msg_alloc_rand();
 	m[2] = msg_alloc_rand();
@@ -203,9 +203,9 @@ test_arithmetic(void)
 
 	tiimat3_util_dealloc(sk);
 	tiimat3_util_dealloc(pk);
-	tiimat3_dealloc_msg(cmp, 1);
+	tiimat3_msg_dealloc(cmp, 1);
 	for (i = 0; i < 4; ++i)
-		tiimat3_dealloc_msg(m[i], 1);
+		tiimat3_msg_dealloc(m[i], 1);
 	tiimat3_util_dealloc(ct);
 	tiimat3_util_dealloc(p);
 }
@@ -226,7 +226,7 @@ test_modswitch(void)
 	sk = tiimat3_util_alloc(1, sizeof *sk);
 	pk = tiimat3_util_alloc(1, sizeof *pk);
 	cmp = msg_alloc_rand();
-	m = tiimat3_alloc_msg(1);
+	m = tiimat3_msg_alloc(1);
 	ct = tiimat3_util_alloc(TIIMAT3_QLEN, sizeof *ct);
 	delta = tiimat3_util_alloc(2, sizeof *delta);
 	p = tiimat3_util_alloc(TIIMAT3_QLEN, sizeof *p);
@@ -270,8 +270,8 @@ test_modswitch(void)
 	tiimat3_util_dealloc(delta);
 	tiimat3_util_dealloc(ct);
 	tiimat3_util_dealloc(p);
-	tiimat3_dealloc_msg(cmp, 1);
-	tiimat3_dealloc_msg(m, 1);
+	tiimat3_msg_dealloc(cmp, 1);
+	tiimat3_msg_dealloc(m, 1);
 	tiimat3_util_dealloc(pk);
 	tiimat3_util_dealloc(sk);
 }
@@ -297,7 +297,7 @@ test_keyswitch(void)
 	ksw2 = tiimat3_util_alloc(TIIMAT3_QPLEN, sizeof *ksw2);
 	kswr = tiimat3_util_alloc(TIIMAT3_QPLEN, sizeof *kswr);
 	cmp = msg_alloc_rand();
-	m = tiimat3_alloc_msg(1);
+	m = tiimat3_msg_alloc(1);
 	ct = tiimat3_util_alloc(TIIMAT3_QPLEN, sizeof *ct);
 	csw = tiimat3_util_alloc(TIIMAT3_QPLEN, sizeof *csw);
 	cswr = tiimat3_util_alloc(1, sizeof *cswr);
@@ -422,8 +422,8 @@ test_keyswitch(void)
 	tiimat3_util_dealloc(ksw2);
 	tiimat3_util_dealloc(kswr);
 
-	tiimat3_dealloc_msg(cmp, 1);
-	tiimat3_dealloc_msg(m, 1);
+	tiimat3_msg_dealloc(cmp, 1);
+	tiimat3_msg_dealloc(m, 1);
 	tiimat3_util_dealloc(ct);
 	tiimat3_util_dealloc(csw);
 	tiimat3_util_dealloc(cswr);
@@ -437,19 +437,19 @@ main(void)
 
 	tiimat3_bgv_init();
 
-	fputs("[+] Testing BGV packing:    ", stderr);
+	fputs("[+] Testing BGV packing:      ", stderr);
 	test_pack(), fputs("1/1.\n", stderr);
 
-	fputs("[+] Testing BGV encrypt:    ", stderr);
+	fputs("[+] Testing BGV encrypt:      ", stderr);
 	test_encrypt(), fputs("1/1.\n", stderr);
 
-	fputs("[+] Testing BGV arithmetic: ", stderr);
+	fputs("[+] Testing BGV arithmetic:   ", stderr);
 	test_arithmetic(), fputs("1/1.\n", stderr);
 
-	fputs("[+] Testing BGV modswitch:  ", stderr);
+	fputs("[+] Testing BGV modswitch:    ", stderr);
 	test_modswitch(), fputs("1/1.\n", stderr);
 
-	fputs("[+] Testing BGV keyswitch:  ", stderr);
+	fputs("[+] Testing BGV keyswitch:    ", stderr);
 	test_keyswitch(), fputs("5/5.\n", stderr);
 
 	tiimat3_bgv_deinit();

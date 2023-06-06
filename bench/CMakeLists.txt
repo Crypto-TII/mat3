@@ -17,7 +17,7 @@ else()
 endif()
 target_compile_options(bench_chen2020 PRIVATE -fopenmp)
 target_link_options(bench_chen2020 PRIVATE -fopenmp)
-target_link_libraries(bench_chen2020 benchmark gmp)
+target_link_libraries(bench_chen2020 benchmark crypto gmp ssl)
 
 foreach(DIM IN ITEMS 32 64 128)
 	add_executable(bench_slicing_${DIM} slicing.cpp
@@ -38,7 +38,7 @@ foreach(DIM IN ITEMS 32 64 128)
 		-DTIIMAT3_DIM=${DIM})
 	target_compile_options(bench_slicing_${DIM} PRIVATE -fopenmp)
 	target_link_options(bench_slicing_${DIM} PRIVATE -fopenmp)
-	target_link_libraries(bench_slicing_${DIM} benchmark gmp)
+	target_link_libraries(bench_slicing_${DIM} benchmark crypto gmp ssl)
 endforeach()
 
 foreach(BLOCKS IN ITEMS 1 2 3 4 8)
@@ -62,7 +62,7 @@ foreach(BLOCKS IN ITEMS 1 2 3 4 8)
 		-DTIIMAT3_PREROT=1)
 	target_compile_options(bench_triples_hoist_${BLOCKS} PRIVATE -fopenmp)
 	target_link_options(bench_triples_hoist_${BLOCKS} PRIVATE -fopenmp)
-	target_link_libraries(bench_triples_hoist_${BLOCKS} benchmark gmp)
+	target_link_libraries(bench_triples_hoist_${BLOCKS} benchmark crypto gmp ssl)
 
 	add_executable(bench_triples_mixed_${BLOCKS} triples.cpp
 		${SRC}/util.h ${SRC}/util.c
@@ -85,7 +85,7 @@ foreach(BLOCKS IN ITEMS 1 2 3 4 8)
 		-DTIIMAT3_PREROT=1)
 	target_compile_options(bench_triples_mixed_${BLOCKS} PRIVATE -fopenmp)
 	target_link_options(bench_triples_mixed_${BLOCKS} PRIVATE -fopenmp)
-	target_link_libraries(bench_triples_mixed_${BLOCKS} benchmark gmp)
+	target_link_libraries(bench_triples_mixed_${BLOCKS} benchmark crypto gmp ssl)
 
 	add_executable(bench_triples_recomp_${BLOCKS} triples.cpp
 		${SRC}/util.h ${SRC}/util.c
@@ -107,7 +107,7 @@ foreach(BLOCKS IN ITEMS 1 2 3 4 8)
 		-DTIIMAT3_PREROT=0)
 	target_compile_options(bench_triples_recomp_${BLOCKS} PRIVATE -fopenmp)
 	target_link_options(bench_triples_recomp_${BLOCKS} PRIVATE -fopenmp)
-	target_link_libraries(bench_triples_recomp_${BLOCKS} benchmark gmp)
+	target_link_libraries(bench_triples_recomp_${BLOCKS} benchmark crypto gmp ssl)
 
 	add_executable(bench_triples_reuse_${BLOCKS} triples.cpp
 		${SRC}/util.h ${SRC}/util.c
@@ -129,5 +129,5 @@ foreach(BLOCKS IN ITEMS 1 2 3 4 8)
 		-DTIIMAT3_PREROT=1)
 	target_compile_options(bench_triples_reuse_${BLOCKS} PRIVATE -fopenmp)
 	target_link_options(bench_triples_reuse_${BLOCKS} PRIVATE -fopenmp)
-	target_link_libraries(bench_triples_reuse_${BLOCKS} benchmark gmp)
+	target_link_libraries(bench_triples_reuse_${BLOCKS} benchmark crypto gmp ssl)
 endforeach()

@@ -1,8 +1,8 @@
 #include "../src/random.c"
 
 #define SAMPLES 10000000
-signed char samples_i8[SAMPLES];
-unsigned long samples_u64[SAMPLES];
+int8_t samples_i8[SAMPLES];
+uint64_t samples_u64[SAMPLES];
 
 static double
 binomial(int n, int k)
@@ -141,13 +141,13 @@ int
 main(void)
 {
 
-	fputs("[+] Testing Keccak: ", stderr);
+	fputs("[+] Testing Keccak:           ", stderr);
 	test_keccak(), fputs("1/1.\n", stderr);
 
-	fputs("[+] Testing random: ", stderr);
+	fputs("[+] Testing random:           ", stderr);
 	test_random(), fputs("3/3.\n", stderr);
 
-	fputs("[+] Testing sample: ", stderr);
+	fputs("[+] Testing sample:           ", stderr);
 	test_sample(), fputs("6/6.\n", stderr);
 
 	return 0;

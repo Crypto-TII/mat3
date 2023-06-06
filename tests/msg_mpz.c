@@ -92,13 +92,13 @@ int
 main(void)
 {
 
-	fputs("[+] Testing cmod (mpz):   ", stderr);
+	fputs("[+] Testing cmod (mpz):       ", stderr);
 	test_cmod(), fputs("4/4.\n", stderr);
 
-	fputs("[+] Testing CRT (mpz):    ", stderr);
+	fputs("[+] Testing CRT (mpz):        ", stderr);
 	test_crt(), fputs("1/1.\n", stderr);
 
-	fputs("[+] Testing Seiler (mpz): ", stderr);
+	fputs("[+] Testing Seiler (mpz):     ", stderr);
 	test_seiler(), fputs("1/1.\n", stderr);
 
 	return 0;

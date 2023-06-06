@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.13)
 
 set(CMAKE_C_FLAGS_COMMON "-Wall -Wextra -Wpedantic -Wundef")
-set(CMAKE_C_FLAGS "-std=c89 -pipe")
+set(CMAKE_C_FLAGS "$ENV{CFLAGS} -std=c89 -pipe")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${CMAKE_C_FLAGS_COMMON}")
-set(CMAKE_CXX_FLAGS "-std=c++17 -pipe")
+set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -std=c++17 -pipe")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CMAKE_C_FLAGS_COMMON}")
 
 if(CMAKE_BUILD_DEBUG)

@@ -151,10 +151,10 @@ main(void)
 	tiimat3_init_mixed();
 	#endif /* TIIMAT3_HOIST */
 
-	fputs("[+] Testing mat3:        ", stderr);
+	fputs("[+] Testing mat3:             ", stderr);
 	test_mat3(), fputs("4/4.\n", stderr);
 
-	fputs("[+] Testing mat3 shared: ", stderr);
+	fputs("[+] Testing mat3 shared:      ", stderr);
 	test_mat3_shared(), fputs("4/4.\n", stderr);
 
 	return 0;

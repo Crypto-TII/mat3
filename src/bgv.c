@@ -3,7 +3,7 @@
 size_t tiimat3_chunk_idx[TIIMAT3_OMEGA][TIIMAT3_KMAX];
 size_t tiimat3_chunk_len[TIIMAT3_OMEGA];
 
-#define MAX(a, b)   ((a) > (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
 
 static void ciphertext_intt(size_t idx, tiimat3_Ciphertext *ct);
 static void ciphertext_ntt(size_t idx, tiimat3_Ciphertext *ct);
