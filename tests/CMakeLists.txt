@@ -51,7 +51,7 @@ foreach(HOIST IN ITEMS 0 1)
 				crypto gmp hexl ssl)
 		else()
 			target_sources(test_triples_${HOIST}${PREROT} PRIVATE
-				${SRC}/ring_i64.h ${SRC}/ring_i64.cpp)
+				${SRC}/ring_i64.h ${SRC}/ring_i64.c)
 			target_link_libraries(test_triples_${HOIST}${PREROT}
 				crypto gmp ssl)
 		endif()
